@@ -44,10 +44,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_app_role: {
-        Args: never
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "analista" | "membro" | "proprietario"
