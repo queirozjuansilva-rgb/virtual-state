@@ -1,6 +1,6 @@
 import "server-only"
 
-import { redirect } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
 
 import { createClient } from "@/lib/supabase/server"
@@ -42,5 +42,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser()
   if (!user) redirect("/login")
+  return user
+}
+
+/** Área administrativa: quem não é admin recebe 404 (não revela a rota). */
+export async function requireAdmin(): Promise<CurrentUser> {
+  const user = await requireUser()
+  if (user.role !== "admin") notFound()
   return user
 }
