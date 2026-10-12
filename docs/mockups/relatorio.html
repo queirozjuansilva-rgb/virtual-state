@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Relatório de Viabilidade Detalhado - virtual.estate</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d968b",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#102220",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Main Layout Container (Full Screen Modal Style) -->
+<div class="relative flex min-h-screen w-full flex-col bg-white dark:bg-background-dark overflow-x-hidden">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 px-6 lg:px-10 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="text-primary">
+<svg class="size-8" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z" fill="currentColor"></path>
+</svg>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight">virtual.estate</h1>
+<nav class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Relatórios</a>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100">Setor 42</span>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                    Exportar PDF
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm">
+<span class="material-symbols-outlined text-lg">close</span>
+                    Fechar
+                </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 max-w-5xl mx-auto w-full px-6 py-8">
+<!-- Updating Banner (Hidden by default, shown here for visual representation) -->
+<div class="mb-6 flex items-center justify-center gap-3 py-2 px-4 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm font-medium animate-pulse">
+<span class="material-symbols-outlined text-lg spin">sync</span>
+                Atualizando índices e projeções em tempo real...
+            </div>
+<!-- Title Section -->
+<div class="mb-8">
+<h2 class="text-3xl font-black text-slate-900 dark:text-slate-100 mb-2">Relatório de Viabilidade Detalhado</h2>
+<p class="text-slate-500 dark:text-slate-400 max-w-2xl">
+                    Análise técnica, financeira e normativa para o lote 12-B do Setor 42. Este documento é interativo; altere as variáveis abaixo para simular novos cenários de rentabilidade.
+                </p>
+</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-slate-500">ROI Estimado (Anual)</span>
+<span class="material-symbols-outlined text-primary">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold">18.5%</span>
+<span class="text-emerald-500 text-sm font-bold">+2.1%</span>
+</div>
+<div class="mt-4 h-12 w-full bg-primary/5 rounded flex items-end gap-1 px-2 pb-1 overflow-hidden">
+<!-- Mock Mini Chart -->
+<div class="w-full bg-primary/20 h-1/2 rounded-t-sm"></div>
+<div class="w-full bg-primary/30 h-2/3 rounded-t-sm"></div>
+<div class="w-full bg-primary/40 h-1/2 rounded-t-sm"></div>
+<div class="w-full bg-primary/60 h-3/4 rounded-t-sm"></div>
+<div class="w-full bg-primary h-full rounded-t-sm"></div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-slate-500">Risco da Operação</span>
+<span class="material-symbols-outlined text-blue-500">verified_user</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold">Baixo</span>
+</div>
+<p class="mt-4 text-xs text-slate-400 leading-tight">Baseado na estabilidade da região e demanda reprimida por unidades comerciais.</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-slate-500">Status do Lote</span>
+<span class="material-symbols-outlined text-amber-500">event_available</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-bold text-primary">Disponível</span>
+</div>
+<button class="mt-4 w-full py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded hover:bg-slate-200 transition-colors">VER DETALHES DA MATRÍCULA</button>
+</div>
+</div>
+<!-- Editable Variables Section -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-10">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<h3 class="font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+                        Variáveis Editáveis de Projeto
+                    </h3>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                        Recalcular
+                    </button>
+</div>
+<div class="p-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Input 1 -->
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-400">Custo de Construção (R$/m²)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">R$</span>
+<input class="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-semibold" type="number" value="3450"/>
+</div>
+<p class="text-[10px] text-slate-400 italic">Média CUB Setembro/2023</p>
+</div>
+<!-- Input 2 -->
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-400">Área Bruta Locável (ABL m²)</label>
+<div class="relative">
+<input class="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-semibold" type="number" value="12500"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">m²</span>
+</div>
+<p class="text-[10px] text-slate-400 italic">Eficiência de projeto estimada em 82%</p>
+</div>
+<!-- Input 3 -->
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-400">Valor de Venda Estimado</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">R$</span>
+<input class="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-semibold" type="number" value="8200"/>
+</div>
+<p class="text-[10px] text-slate-400 italic">Baseado em comparativos locais recentes</p>
+</div>
+</div>
+<!-- Complex Table Section -->
+<div class="mt-10 overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+<th class="pb-3 px-2">Indicador de Viabilidade</th>
+<th class="pb-3 px-2">Cenário Conservador</th>
+<th class="pb-3 px-2">Cenário Base</th>
+<th class="pb-3 px-2">Cenário Otimista</th>
+</tr>
+</thead>
+<tbody class="text-sm font-medium">
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="py-4 px-2">VGV Total (Valor Geral de Venda)</td>
+<td class="py-4 px-2">R$ 92.5M</td>
+<td class="py-4 px-2 text-primary font-bold">R$ 102.5M</td>
+<td class="py-4 px-2">R$ 115.8M</td>
+</tr>
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="py-4 px-2">Margem Líquida</td>
+<td class="py-4 px-2">14.2%</td>
+<td class="py-4 px-2 text-primary font-bold">18.5%</td>
+<td class="py-4 px-2">22.1%</td>
+</tr>
+<tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="py-4 px-2">Payback Estimado</td>
+<td class="py-4 px-2">48 meses</td>
+<td class="py-4 px-2 text-primary font-bold">38 meses</td>
+<td class="py-4 px-2">32 meses</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Projections Visual -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<h4 class="text-sm font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">query_stats</span>
+                        Projeção de ROI (5 anos)
+                    </h4>
+<div class="h-48 w-full flex items-end justify-between gap-2 px-2">
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-[20%] relative">
+<div class="absolute inset-0 bg-primary/40 rounded-t-lg scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform"></div>
+</div>
+<span class="text-[10px] font-bold text-slate-400">ANO 1</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-[45%] relative">
+<div class="absolute inset-0 bg-primary/60 rounded-t-lg scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform"></div>
+</div>
+<span class="text-[10px] font-bold text-slate-400">ANO 2</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-[65%] relative">
+<div class="absolute inset-0 bg-primary/80 rounded-t-lg scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform"></div>
+</div>
+<span class="text-[10px] font-bold text-slate-400">ANO 3</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-[85%] relative">
+<div class="absolute inset-0 bg-primary rounded-t-lg scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform"></div>
+</div>
+<span class="text-[10px] font-bold text-slate-400">ANO 4</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2 group">
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-full relative">
+<div class="absolute inset-0 bg-primary rounded-t-lg scale-y-0 group-hover:scale-y-100 origin-bottom transition-transform"></div>
+</div>
+<span class="text-[10px] font-bold text-slate-400">ANO 5</span>
+</div>
+</div>
+</div>
+<div class="bg-primary p-6 rounded-xl border border-primary shadow-lg text-white relative overflow-hidden">
+<!-- Decor pattern -->
+<div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-[120px] translate-x-1/4 -translate-y-1/4">map</span>
+</div>
+<h4 class="text-sm font-bold mb-2 uppercase tracking-widest opacity-80">Localização Estratégica</h4>
+<p class="text-xl font-bold mb-6">Setor 42 - Gleba Sul</p>
+<div class="aspect-video bg-white/10 rounded-lg mb-4 overflow-hidden relative border border-white/20">
+<img alt="Aerial view of urban land lot" class="w-full h-full object-cover" data-alt="Aerial drone view of a city land development plot" data-location="Curitiba" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAxfco_H1fa9ocPpvxqD7MxqhYwzUG21ZMAs6Ah-Q3CPYsp8DC8gHtGGhVjw_fDHxD2D6XdtaN2YCzLZcUKfDQ62JecLb3qSxkwjykfMBaQP_mR1HD4YAW959zrxS8q6G-BP-cfQjWjSez3d3Q1DFW2YPgFx1cwY3PUXaKUMAcwDfBWYs-kllmdUrASjDtTUTd0gsuPGmU3T2Z7AtrhRR6IRUKBf1pEo9_MYdPYe9h1TuxS90OsB9r3CtiDxtKERhyRgATlsDkZuM"/>
+<div class="absolute inset-0 bg-primary/20 pointer-events-none"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white">
+<span class="material-symbols-outlined text-4xl">location_on</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">visibility</span>
+                            2.4k Visitas
+                        </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">handshake</span>
+                            3 Propostas
+                        </div>
+</div>
+</div>
+</div>
+<!-- Sticky Bottom Actions -->
+<div class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 p-4 z-50">
+<div class="max-w-5xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+<span class="text-xs font-medium text-slate-500">Documento em rascunho. Alterações não salvas.</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all">
+                            Descartar
+                        </button>
+<button class="px-8 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">save</span>
+                            Salvar Alterações
+                        </button>
+</div>
+</div>
+</div>
+<!-- Padding for sticky bottom -->
+<div class="h-24"></div>
+</main>
+</div>
+</body></html>
