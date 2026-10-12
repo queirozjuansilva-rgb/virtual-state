@@ -44,6 +44,10 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (!isAuthenticated && !isPublic(pathname)) {
+    // Rotas de API respondem 401 em vez de redirecionar (o cliente é um fetch).
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ erro: "Sua sessão expirou. Entre de novo." }, { status: 401 })
+    }
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`

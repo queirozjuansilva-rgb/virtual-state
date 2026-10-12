@@ -140,6 +140,13 @@ export function montarConfig(defaults: LinhaDefault[], pesos: LinhaPeso[]): Conf
   }
 }
 
+/** Início (ISO) da janela de comparáveis contada a partir de `hoje`. */
+export function inicioJanela(config: Pick<ConfigMotor, "mercado">, hoje = new Date()): string {
+  const desde = new Date(hoje)
+  desde.setMonth(desde.getMonth() - config.mercado.janelaMeses)
+  return desde.toISOString().slice(0, 10)
+}
+
 /** Tipologia de comparável usada para o preço de venda de cada uso. */
 export const TIPOLOGIA_POR_USO: Record<
   Uso,

@@ -1,0 +1,610 @@
+{
+  "_sobre": "Snapshot do seed fictício (supabase/seed.sql) em 2026-10-12, visto por um admin. Comparáveis já filtrados por raio de 1500 m e janela de 24 meses. Regenerar quando o seed mudar.",
+  "hoje": "2026-10-12",
+  "municipios": [
+    {
+      "id": "9f8e27cc-96c8-4aa6-9cc5-387dc0431648",
+      "name": "Fortaleza",
+      "uf": "CE",
+      "coverage_status": "em_implantacao"
+    }
+  ],
+  "zonas": [
+    {
+      "id": "25c39060-bbcc-4a54-ac33-a48d46ab7ed3",
+      "code": "ZT-1",
+      "name": "Zona de Teste 1: Orla (fictícia)",
+      "municipality_id": "9f8e27cc-96c8-4aa6-9cc5-387dc0431648"
+    },
+    {
+      "id": "2486b4d1-c1bc-4c5c-a473-a1f383db0467",
+      "code": "ZT-2",
+      "name": "Zona de Teste 2: Adensamento (fictícia)",
+      "municipality_id": "9f8e27cc-96c8-4aa6-9cc5-387dc0431648"
+    },
+    {
+      "id": "85e43acc-faaf-4255-9531-5288eb0f845e",
+      "code": "ZT-3",
+      "name": "Zona de Teste 3: Ocupação moderada (fictícia)",
+      "municipality_id": "9f8e27cc-96c8-4aa6-9cc5-387dc0431648"
+    }
+  ],
+  "documento": { "kind": "lei_complementar", "number": "999/2026-TESTE", "is_fictitious": true },
+  "terrenos": [
+    {
+      "id": "553f3541-835a-462e-984a-fb982d6534ae",
+      "code": "VE-0001",
+      "address": "Rua de Teste A, 100",
+      "neighborhood": "Meireles",
+      "area_m2": 1200.07,
+      "testada_principal_m": 30,
+      "esquina": true,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "12.345",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 4200000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 1,
+      "observacoes": "Lote de esquina na orla (fictício).",
+      "zone": "ZT-1"
+    },
+    {
+      "id": "8421206a-523a-4783-9ef2-4ee37425249a",
+      "code": "VE-0002",
+      "address": "Rua de Teste B, 220",
+      "neighborhood": "Meireles",
+      "area_m2": 900.05,
+      "testada_principal_m": 25,
+      "esquina": false,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "12.346",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 3100000,
+      "negociacao": "permuta_fisica",
+      "permuta_pct": 0.18,
+      "zones_overlap_count": 1,
+      "observacoes": "Proprietário aceita permuta física (fictício).",
+      "zone": "ZT-1"
+    },
+    {
+      "id": "8d8d3df3-6b86-4be1-ba41-68cf8a7418e2",
+      "code": "VE-0003",
+      "address": "Av. de Teste C, 1500",
+      "neighborhood": "Aldeota",
+      "area_m2": 1400.08,
+      "testada_principal_m": 35,
+      "esquina": false,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "20.001",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 3900000,
+      "negociacao": "misto",
+      "permuta_pct": 0.1,
+      "zones_overlap_count": 2,
+      "observacoes": "Lote na divisa entre duas zonas (teste de interseção múltipla).",
+      "zone": "ZT-2"
+    },
+    {
+      "id": "0ecdb396-ec5c-4e60-b7fb-b9b49e164f6f",
+      "code": "VE-0004",
+      "address": "Rua de Teste D, 800",
+      "neighborhood": "Aldeota",
+      "area_m2": 2000.11,
+      "testada_principal_m": 40,
+      "esquina": true,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "20.002",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 5500000,
+      "negociacao": "misto",
+      "permuta_pct": 0.1,
+      "zones_overlap_count": 1,
+      "observacoes": null,
+      "zone": "ZT-2"
+    },
+    {
+      "id": "8ddbdbbf-0fc9-4bac-8af6-971d61033664",
+      "code": "VE-0005",
+      "address": "Rua de Teste E, 45",
+      "neighborhood": "Varjota",
+      "area_m2": 600.03,
+      "testada_principal_m": 20,
+      "esquina": false,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "20.003",
+      "onus": null,
+      "status": "em_negociacao",
+      "preco_pedido": 1450000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 1,
+      "observacoes": "Em negociação (visível só para admin).",
+      "zone": "ZT-2"
+    },
+    {
+      "id": "2e1075b2-0795-4757-98cf-1ff5061400f7",
+      "code": "VE-0006",
+      "address": "Rua de Teste F, 12",
+      "neighborhood": "Aldeota",
+      "area_m2": 300.02,
+      "testada_principal_m": 12,
+      "esquina": false,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "20.004",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 780000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 1,
+      "observacoes": "Área abaixo do lote mínimo da zona (teste).",
+      "zone": "ZT-2"
+    },
+    {
+      "id": "dae1cdf5-c046-44e8-b5fb-a26f37080a78",
+      "code": "VE-0007",
+      "address": "Rua de Teste G, 300",
+      "neighborhood": "Dionísio Torres",
+      "area_m2": 1350.07,
+      "testada_principal_m": 30,
+      "esquina": false,
+      "topografia": "aclive",
+      "declividade_pct": 8,
+      "matricula_numero": null,
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 2600000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 1,
+      "observacoes": "Sem matrícula informada (teste de risco jurídico).",
+      "zone": "ZT-3"
+    },
+    {
+      "id": "4f5cd1ff-434a-46b2-8779-0c56dbd25a2a",
+      "code": "VE-0008",
+      "address": "Av. de Teste H, 2100",
+      "neighborhood": "Cocó",
+      "area_m2": 1200.07,
+      "testada_principal_m": 30,
+      "esquina": false,
+      "topografia": "declive",
+      "declividade_pct": 12,
+      "matricula_numero": "31.100",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 2900000,
+      "negociacao": "permuta_financeira",
+      "permuta_pct": 0.15,
+      "zones_overlap_count": 1,
+      "observacoes": "Cruza a APP de teste (interseção automática).",
+      "zone": "ZT-3"
+    },
+    {
+      "id": "0f565a47-3bd5-4c43-b72d-5748a70f9158",
+      "code": "VE-0009",
+      "address": "Rua de Teste I, 950",
+      "neighborhood": "Dionísio Torres",
+      "area_m2": 3000.17,
+      "testada_principal_m": 50,
+      "esquina": true,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "31.101",
+      "onus": null,
+      "status": "reservado",
+      "preco_pedido": 6200000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 1,
+      "observacoes": "Reservado (visível só para admin).",
+      "zone": "ZT-3"
+    },
+    {
+      "id": "b884d43c-d930-43e7-affc-2ae8ea19f1e6",
+      "code": "VE-0010",
+      "address": "Rua de Teste J, 77",
+      "neighborhood": "Centro",
+      "area_m2": 750.04,
+      "testada_principal_m": 25,
+      "esquina": false,
+      "topografia": "plano",
+      "declividade_pct": null,
+      "matricula_numero": "40.010",
+      "onus": null,
+      "status": "disponivel",
+      "preco_pedido": 1200000,
+      "negociacao": "dinheiro",
+      "permuta_pct": null,
+      "zones_overlap_count": 0,
+      "observacoes": "Fora das zonas de teste: zona precisa ser atribuída à mão.",
+      "zone": null
+    }
+  ],
+  "porTerreno": {
+    "553f3541-835a-462e-984a-fb982d6534ae": {
+      "restricoes": [],
+      "zonas": [["ZT-1", 1]],
+      "comparaveis": {
+        "apartamento": [
+          11000, 14574.71, 11988.76, 10016.13, 13362.96, 14583.33, 12560.61, 12961.24, 14175.44,
+          13768.52, 11327.27, 10338.24, 13773.05
+        ],
+        "sala_comercial": [10671.76, 10675.68, 12150.54]
+      }
+    },
+    "8421206a-523a-4783-9ef2-4ee37425249a": {
+      "restricoes": [],
+      "zonas": [["ZT-1", 1]],
+      "comparaveis": {
+        "apartamento": [
+          11000, 14574.71, 12958.33, 11988.76, 13362.96, 12560.61, 14175.44, 11663.79, 10338.24
+        ],
+        "sala_comercial": [12150.54]
+      }
+    },
+    "8d8d3df3-6b86-4be1-ba41-68cf8a7418e2": {
+      "restricoes": [],
+      "zonas": [
+        ["ZT-2", 0.5529],
+        ["ZT-1", 0.4471]
+      ],
+      "comparaveis": {
+        "apartamento": [
+          14574.71, 11988.76, 10016.13, 13362.96, 14583.33, 12560.61, 12961.24, 14175.44, 13768.52,
+          11327.27, 11662.65, 10338.24, 13773.05
+        ],
+        "sala_comercial": [10671.76, 10675.68]
+      }
+    },
+    "0ecdb396-ec5c-4e60-b7fb-b9b49e164f6f": {
+      "restricoes": [],
+      "zonas": [["ZT-2", 1]],
+      "comparaveis": {
+        "apartamento": [
+          11000, 14574.71, 11988.76, 10016.13, 13362.96, 14583.33, 12560.61, 14175.44, 13768.52,
+          11663.79, 11327.27, 11662.65, 10338.24
+        ],
+        "sala_comercial": [9151.79, 10671.76, 10675.68, 12150.54]
+      }
+    },
+    "8ddbdbbf-0fc9-4bac-8af6-971d61033664": {
+      "restricoes": [],
+      "zonas": [["ZT-2", 1]],
+      "comparaveis": {
+        "apartamento": [
+          8092.78, 14574.71, 11988.76, 10016.13, 14583.33, 12560.61, 12961.24, 13768.52, 11327.27,
+          11662.65, 13773.05
+        ],
+        "sala_comercial": [10671.76, 10675.68]
+      }
+    },
+    "2e1075b2-0795-4757-98cf-1ff5061400f7": {
+      "restricoes": [],
+      "zonas": [["ZT-2", 1]],
+      "comparaveis": {
+        "apartamento": [
+          8884.89, 11000, 11988.76, 13362.96, 9681.32, 14175.44, 11663.79, 11327.27, 10338.24,
+          10010.53
+        ],
+        "sala_comercial": [9151.79, 12150.54]
+      }
+    },
+    "dae1cdf5-c046-44e8-b5fb-a26f37080a78": {
+      "restricoes": [],
+      "zonas": [["ZT-3", 1]],
+      "comparaveis": {
+        "apartamento": [
+          8092.78, 8624.06, 9415.25, 8093.75, 9681.32, 9411.76, 8357.14, 11327.27, 8886.79
+        ],
+        "sala_comercial": [9151.79]
+      }
+    },
+    "4f5cd1ff-434a-46b2-8779-0c56dbd25a2a": {
+      "restricoes": [
+        {
+          "kind": "app",
+          "name": "APP de teste: margem fictícia",
+          "is_fictitious": true,
+          "overlap_m2": 311.45
+        }
+      ],
+      "zonas": [["ZT-3", 1]],
+      "comparaveis": {
+        "apartamento": [8884.89, 8624.06, 9681.32, 8357.14],
+        "sala_comercial": [9151.79]
+      }
+    },
+    "0f565a47-3bd5-4c43-b72d-5748a70f9158": {
+      "restricoes": [],
+      "zonas": [["ZT-3", 1]],
+      "comparaveis": { "apartamento": [8092.78, 8624.06, 9415.25, 8093.75, 9411.76, 8886.79] }
+    },
+    "b884d43c-d930-43e7-affc-2ae8ea19f1e6": {
+      "restricoes": [],
+      "zonas": [],
+      "comparaveis": {}
+    }
+  },
+  "regras": [
+    {
+      "zone": "ZT-1",
+      "use_type": "residencial_vertical",
+      "permitted": true,
+      "ca_basico": 2,
+      "ca_max": 3,
+      "to_max": 0.6,
+      "permeabilidade_min": 0.15,
+      "gabarito_m": 72,
+      "gabarito_pavimentos": 24,
+      "recuo_frontal": "5",
+      "recuo_lateral": "max(H/10, 3)",
+      "recuo_fundos": "max(H/10, 3)",
+      "lote_minimo_m2": 450,
+      "testada_minima_m": 15,
+      "outorga_fator": 0.3
+    },
+    { "zone": "ZT-1", "use_type": "residencial_horizontal", "permitted": false },
+    {
+      "zone": "ZT-1",
+      "use_type": "comercial",
+      "permitted": true,
+      "ca_basico": 2,
+      "ca_max": 3,
+      "to_max": 0.7,
+      "permeabilidade_min": 0.1,
+      "gabarito_m": 48,
+      "gabarito_pavimentos": 14,
+      "recuo_frontal": "5",
+      "recuo_lateral": "3",
+      "recuo_fundos": "3",
+      "lote_minimo_m2": 360,
+      "testada_minima_m": 12,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-1",
+      "use_type": "misto",
+      "permitted": true,
+      "ca_basico": 2,
+      "ca_max": 3.5,
+      "to_max": 0.6,
+      "permeabilidade_min": 0.15,
+      "gabarito_m": 72,
+      "gabarito_pavimentos": 24,
+      "recuo_frontal": "5",
+      "recuo_lateral": "max(H/10, 3)",
+      "recuo_fundos": "max(H/10, 3)",
+      "lote_minimo_m2": 450,
+      "testada_minima_m": 15,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-2",
+      "use_type": "residencial_vertical",
+      "permitted": true,
+      "ca_basico": 1.5,
+      "ca_max": 2.5,
+      "to_max": 0.6,
+      "permeabilidade_min": 0.2,
+      "gabarito_m": 48,
+      "gabarito_pavimentos": 16,
+      "recuo_frontal": "5",
+      "recuo_lateral": "max(H/12, 2.5)",
+      "recuo_fundos": "max(H/12, 2.5)",
+      "lote_minimo_m2": 360,
+      "testada_minima_m": 12,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-2",
+      "use_type": "residencial_horizontal",
+      "permitted": true,
+      "ca_basico": 1,
+      "ca_max": 1,
+      "to_max": 0.6,
+      "permeabilidade_min": 0.2,
+      "gabarito_m": 10,
+      "gabarito_pavimentos": 2,
+      "recuo_frontal": "3",
+      "recuo_lateral": "1.5",
+      "recuo_fundos": "3",
+      "lote_minimo_m2": 250,
+      "testada_minima_m": 10,
+      "outorga_fator": null
+    },
+    {
+      "zone": "ZT-2",
+      "use_type": "comercial",
+      "permitted": true,
+      "ca_basico": 1.5,
+      "ca_max": 2,
+      "to_max": 0.7,
+      "permeabilidade_min": 0.15,
+      "gabarito_m": 30,
+      "gabarito_pavimentos": 8,
+      "recuo_frontal": "5",
+      "recuo_lateral": "2",
+      "recuo_fundos": "3",
+      "lote_minimo_m2": 300,
+      "testada_minima_m": 10,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-2",
+      "use_type": "misto",
+      "permitted": true,
+      "ca_basico": 1.5,
+      "ca_max": 2.5,
+      "to_max": 0.65,
+      "permeabilidade_min": 0.2,
+      "gabarito_m": 48,
+      "gabarito_pavimentos": 16,
+      "recuo_frontal": "5",
+      "recuo_lateral": "max(H/12, 2.5)",
+      "recuo_fundos": "max(H/12, 2.5)",
+      "lote_minimo_m2": 360,
+      "testada_minima_m": 12,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-3",
+      "use_type": "residencial_vertical",
+      "permitted": true,
+      "ca_basico": 1,
+      "ca_max": 1.5,
+      "to_max": 0.5,
+      "permeabilidade_min": 0.3,
+      "gabarito_m": 24,
+      "gabarito_pavimentos": 8,
+      "recuo_frontal": "5",
+      "recuo_lateral": "max(H/15, 2)",
+      "recuo_fundos": "3",
+      "lote_minimo_m2": 450,
+      "testada_minima_m": 15,
+      "outorga_fator": 0.3
+    },
+    {
+      "zone": "ZT-3",
+      "use_type": "residencial_horizontal",
+      "permitted": true,
+      "ca_basico": 0.8,
+      "ca_max": 0.8,
+      "to_max": 0.5,
+      "permeabilidade_min": 0.3,
+      "gabarito_m": 9,
+      "gabarito_pavimentos": 2,
+      "recuo_frontal": "3",
+      "recuo_lateral": "1.5",
+      "recuo_fundos": "2",
+      "lote_minimo_m2": 200,
+      "testada_minima_m": 8,
+      "outorga_fator": null
+    },
+    { "zone": "ZT-3", "use_type": "comercial", "permitted": false },
+    {
+      "zone": "ZT-3",
+      "use_type": "misto",
+      "permitted": true,
+      "ca_basico": 1,
+      "ca_max": 1.2,
+      "to_max": 0.55,
+      "permeabilidade_min": 0.3,
+      "gabarito_m": 15,
+      "gabarito_pavimentos": 4,
+      "recuo_frontal": "5",
+      "recuo_lateral": "2",
+      "recuo_fundos": "3",
+      "lote_minimo_m2": 360,
+      "testada_minima_m": 12,
+      "outorga_fator": 0.3
+    }
+  ],
+  "cubs": [
+    {
+      "uf": "CE",
+      "standard": "R8-N",
+      "value_m2": 2458.13,
+      "reference_month": "2026-08-01",
+      "source": "Sinduscon-CE"
+    }
+  ],
+  "defaults": [
+    ["cenario.conservador.custo", 0.1, "Default da plataforma (a calibrar)"],
+    ["cenario.conservador.prazo_vendas", 0.5, "Default da plataforma (a calibrar)"],
+    ["cenario.conservador.preco", -0.1, "Default da plataforma (a calibrar)"],
+    ["cenario.otimista.custo", -0.05, "Default da plataforma (a calibrar)"],
+    ["cenario.otimista.prazo_vendas", -0.25, "Default da plataforma (a calibrar)"],
+    ["cenario.otimista.preco", 0.05, "Default da plataforma (a calibrar)"],
+    ["mercado.janela_meses", 24, "Default da plataforma (a calibrar)"],
+    ["mercado.raio_m", 1500, "Default da plataforma (a calibrar)"],
+    ["premissa.administracao_pct", 0.03, "Valor usual de mercado (a calibrar)"],
+    ["premissa.area_nao_computavel_pct", 0.4, "Valor usual de mercado (a calibrar)"],
+    ["premissa.contingencia_pct", 0.05, "Valor usual de mercado (a calibrar)"],
+    ["premissa.corretagem_pct", 0.05, "Valor usual de mercado (a calibrar)"],
+    ["premissa.curva_obra", "s", "Default da plataforma"],
+    ["premissa.cv_maximo_comparaveis", 0.2, "Default da plataforma (a calibrar)"],
+    ["premissa.declividade_acentuada_pct", 15, "Default da plataforma (a calibrar)"],
+    ["premissa.eficiencia", 0.8, "Valor usual de mercado (a calibrar)"],
+    ["premissa.equivalencia_nao_computavel", 0.5, "Valor usual de mercado (a calibrar)"],
+    ["premissa.fator_cub", 1.3, "Valor usual de mercado (a calibrar)"],
+    ["premissa.forma_aquisicao", "compra", "Default da plataforma"],
+    ["premissa.impostos_pct", 0.04, "Regime Especial de Tributação (a confirmar caso a caso)"],
+    ["premissa.itbi_pct", 0.03, "Valor usual de mercado (a calibrar por município)"],
+    ["premissa.margem_minima_conservador", 0.12, "Default da plataforma (a calibrar)"],
+    ["premissa.marketing_pct", 0.03, "Valor usual de mercado (a calibrar)"],
+    ["premissa.n_minimo_comparaveis", 5, "Default da plataforma (a calibrar)"],
+    ["premissa.pe_direito_m", 3, "Valor usual de mercado (a calibrar)"],
+    ["premissa.permuta_pct", 0, "Default da plataforma"],
+    ["premissa.prazo_aprovacao_meses", 6, "Valor usual de mercado (a calibrar)"],
+    ["premissa.prazo_obra_meses", 30, "Valor usual de mercado (a calibrar)"],
+    ["premissa.prazo_vendas_meses", 24, "Valor usual de mercado (a calibrar)"],
+    ["premissa.projetos_pct", 0.04, "Valor usual de mercado (a calibrar)"],
+    ["premissa.recebimento_chaves_pct", 0.7, "Valor usual de mercado (a calibrar)"],
+    ["premissa.recebimento_obra_pct", 0.2, "Valor usual de mercado (a calibrar)"],
+    ["premissa.recebimento_sinal_pct", 0.1, "Valor usual de mercado (a calibrar)"],
+    ["premissa.registro_pct", 0.01, "Valor usual de mercado (a calibrar)"],
+    ["premissa.usar_ca_maximo", false, "Default da plataforma"],
+    ["premissa.vendas_no_lancamento_pct", 0.3, "Valor usual de mercado (a calibrar)"],
+    ["risco.limiar_alto", 50, "Default da plataforma (a calibrar)"],
+    ["risco.limiar_medio", 25, "Default da plataforma (a calibrar)"]
+  ],
+  "pesos": [
+    ["area_abaixo_minimo", "fisico", 20, "Área abaixo do lote mínimo"],
+    ["comparaveis_insuficientes", "mercado", 15, "Poucos comparáveis de mercado"],
+    ["dispersao_preco_alta", "mercado", 10, "Alta dispersão de preços"],
+    ["lote_multiplas_zonas", "urbanistico", 10, "Lote em mais de uma zona"],
+    ["margem_conservadora_baixa", "mercado", 20, "Margem baixa no cenário conservador"],
+    ["matricula_ausente", "juridico", 20, "Matrícula não informada"],
+    ["onus_registrado", "juridico", 15, "Ônus registrado"],
+    ["parametro_ausente", "urbanistico", 15, "Parâmetro urbanístico não validado"],
+    ["regra_nao_validada", "urbanistico", 30, "Sem regra urbanística validada para o uso"],
+    ["restricao_alagavel", "fisico", 25, "Área alagável"],
+    ["restricao_ambiental_outra", "fisico", 15, "Outra restrição físico-ambiental"],
+    ["restricao_app", "fisico", 25, "Interseção com APP"],
+    ["testada_abaixo_minimo", "fisico", 15, "Testada abaixo da mínima"],
+    ["testada_estimada", "fisico", 5, "Testada não informada (geometria estimada)"],
+    ["topografia_acentuada", "fisico", 10, "Topografia acentuada"],
+    ["uso_nao_permitido", "urbanistico", 40, "Uso não permitido na zona"],
+    ["zona_atribuida_manualmente", "urbanistico", 10, "Zona atribuída manualmente"],
+    ["zona_nao_identificada", "urbanistico", 25, "Zona não identificada"]
+  ],
+  "pontos": [
+    {
+      "longitude": -38.498,
+      "latitude": -3.74,
+      "zona": "ZT-2",
+      "camadas": [],
+      "comparaveis": {
+        "apartamento": [
+          11000, 14574.71, 11988.76, 10016.13, 13362.96, 14583.33, 12560.61, 14175.44, 13768.52,
+          11663.79, 11327.27, 11662.65, 10338.24
+        ],
+        "sala_comercial": [9151.79, 10671.76, 10675.68, 12150.54]
+      }
+    },
+    {
+      "longitude": -38.487,
+      "latitude": -3.755,
+      "zona": "ZT-3",
+      "camadas": [
+        { "kind": "app", "name": "APP de teste: margem fictícia", "is_fictitious": true }
+      ],
+      "comparaveis": {
+        "apartamento": [8884.89, 8624.06, 9681.32, 8357.14],
+        "sala_comercial": [9151.79]
+      }
+    }
+  ]
+}
