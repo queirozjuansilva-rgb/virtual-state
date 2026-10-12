@@ -1451,6 +1451,21 @@ export type Database = {
         }
         Returns: string
       }
+      comparables_near_land: {
+        Args: {
+          p_land_id: string
+          p_radius_m: number
+          p_since: string
+          p_typology: Database["public"]["Enums"]["comparable_typology"]
+        }
+        Returns: {
+          distance_m: number
+          id: string
+          is_fictitious: boolean
+          observed_on: string
+          price_m2: number
+        }[]
+      }
       environmental_hits: {
         Args: { p_geojson: Json; p_municipality_id: string }
         Returns: {
