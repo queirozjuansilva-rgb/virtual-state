@@ -5,6 +5,7 @@ import { Suspense } from "react"
 
 import AdminLoading from "@/app/(app)/admin/loading"
 import { FictitiousBadge, LandStatusBadge } from "@/components/admin/badges"
+import { EstudoPanel } from "@/components/admin/estudo-panel"
 import { LandForm } from "@/components/admin/land-form"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { ENVIRONMENTAL_LAYER_KIND } from "@/lib/domain/labels"
@@ -16,6 +17,7 @@ import {
   getLandZoneHits,
   listGeoReference,
   listMunicipalityOptions,
+  listRules,
 } from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Terreno" }
@@ -23,14 +25,18 @@ export const metadata: Metadata = { title: "Terreno" }
 async function LandPageContent({ params, searchParams }: PageProps<"/admin/terrenos/[id]">) {
   const [{ id }, { salvo }] = await Promise.all([params, searchParams])
   const land = await getLand(id)
-  const [municipalities, { zones, layers }, zoneHits, envHits] = await Promise.all([
+  const [municipalities, { zones, layers }, zoneHits, envHits, rules] = await Promise.all([
     listMunicipalityOptions(),
     listGeoReference(),
     land.geojson ? getLandZoneHits(land.geojson, land.municipality_id) : Promise.resolve([]),
     land.geojson
       ? getLandEnvironmentalHits(land.geojson, land.municipality_id)
       : Promise.resolve([]),
+    land.zone_id ? listRules(land.zone_id) : Promise.resolve([]),
   ])
+  const usosValidados = rules
+    .filter((r) => r.status === "validado")
+    .map((r) => ({ uso: r.use_type, permitido: r.permitted }))
   const owner = Array.isArray(land.owner) ? land.owner[0] : land.owner
   const mainHit = zoneHits.find((h) => h.zone_id === land.zone_id)
 
@@ -130,6 +136,8 @@ async function LandPageContent({ params, searchParams }: PageProps<"/admin/terre
           )}
         </div>
       </section>
+
+      <EstudoPanel landId={land.id} zonaCodigo={land.zone?.code ?? null} usos={usosValidados} />
 
       <LandForm
         action={saveLand.bind(null, land.id)}
