@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:types": "supabase gen types typescript --project-id jmubvttvyaepdqlbhkdq > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --project-id jmubvttvyaepdqlbhkdq > src/lib/supabase/database.types.ts",
+    "postinstall": "node scripts/copy-maplibre-worker.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

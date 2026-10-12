@@ -36,6 +36,8 @@ type GeoMapProps = {
 
 type DrawMode = "static" | "polygon" | "select"
 
+const MAPLIBRE_WORKER_URL = "/vendor/maplibre-gl-worker.mjs"
+
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] }
 
 export function GeoMap({
@@ -65,8 +67,10 @@ export function GeoMap({
     let map: MapLibreMap | undefined
 
     async function init() {
-      const { Map, NavigationControl } = await import("maplibre-gl")
+      const { Map, NavigationControl, setWorkerUrl } = await import("maplibre-gl")
       if (cancelled || !containerRef.current) return
+      // Worker copiado no postinstall (scripts/copy-maplibre-worker.mjs).
+      setWorkerUrl(MAPLIBRE_WORKER_URL)
       map = new Map({
         container: containerRef.current,
         style: mapStyle(),

@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { LandForm } from "@/components/admin/land-form"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { saveLand } from "@/server/admin/actions"
@@ -7,7 +9,7 @@ import { listGeoReference, listMunicipalityOptions } from "@/server/admin/querie
 
 export const metadata: Metadata = { title: "Novo terreno" }
 
-export default async function NewLandPage() {
+async function NewLandPageContent() {
   const [municipalities, { zones, layers }] = await Promise.all([
     listMunicipalityOptions(),
     listGeoReference(),
@@ -28,5 +30,13 @@ export default async function NewLandPage() {
         submitLabel="Cadastrar terreno"
       />
     </PageContainer>
+  )
+}
+
+export default function NewLandPage() {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <NewLandPageContent />
+    </Suspense>
   )
 }

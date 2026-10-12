@@ -1,7 +1,9 @@
 import { CircleCheck, MapPinned, TriangleAlert } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { FictitiousBadge, LandStatusBadge } from "@/components/admin/badges"
 import { LandForm } from "@/components/admin/land-form"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
@@ -18,10 +20,7 @@ import {
 
 export const metadata: Metadata = { title: "Terreno" }
 
-export default async function LandPage({
-  params,
-  searchParams,
-}: PageProps<"/admin/terrenos/[id]">) {
+async function LandPageContent({ params, searchParams }: PageProps<"/admin/terrenos/[id]">) {
   const [{ id }, { salvo }] = await Promise.all([params, searchParams])
   const land = await getLand(id)
   const [municipalities, { zones, layers }, zoneHits, envHits] = await Promise.all([
@@ -141,5 +140,14 @@ export default async function LandPage({
         submitLabel="Salvar alterações"
       />
     </PageContainer>
+  )
+}
+
+/** Shell estático + conteúdo dependente da URL em Suspense (navegação instantânea). */
+export default function LandPage(props: PageProps<"/admin/terrenos/[id]">) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <LandPageContent {...props} />
+    </Suspense>
   )
 }

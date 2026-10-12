@@ -6,3 +6,4 @@ src/lib/supabase/database.types.ts
 src/components/ui
 docs/mockups
 supabase/.temp
+public/vendor

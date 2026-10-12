@@ -1,7 +1,9 @@
 import { ExternalLink, Plus } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { FictitiousBadge } from "@/components/admin/badges"
 import {
   DeleteButton,
@@ -35,7 +37,7 @@ import {
 
 export const metadata: Metadata = { title: "Município" }
 
-export default async function MunicipalityPage({ params }: PageProps<"/admin/municipios/[id]">) {
+async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/[id]">) {
   const { id } = await params
   const [municipality, documents, zones, layers] = await Promise.all([
     getMunicipality(id),
@@ -188,5 +190,14 @@ export default async function MunicipalityPage({ params }: PageProps<"/admin/mun
         <LegalDocumentForm action={createLegalDocument.bind(null, id)} />
       </Section>
     </PageContainer>
+  )
+}
+
+/** Shell estático + conteúdo dependente da URL em Suspense (navegação instantânea). */
+export default function MunicipalityPage(props: PageProps<"/admin/municipios/[id]">) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <MunicipalityPageContent {...props} />
+    </Suspense>
   )
 }

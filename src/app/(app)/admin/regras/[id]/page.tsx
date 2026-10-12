@@ -1,7 +1,9 @@
 import { CircleCheck } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { RuleForm } from "@/components/admin/rule-form"
 import { LAND_USE } from "@/lib/domain/labels"
@@ -10,7 +12,7 @@ import { getRule, listLegalDocuments } from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Regra urbanística" }
 
-export default async function RulePage({ params, searchParams }: PageProps<"/admin/regras/[id]">) {
+async function RulePageContent({ params, searchParams }: PageProps<"/admin/regras/[id]">) {
   const [{ id }, { salvo }] = await Promise.all([params, searchParams])
   const rule = await getRule(id)
   const zone = Array.isArray(rule.zone) ? rule.zone[0] : rule.zone
@@ -56,5 +58,14 @@ export default async function RulePage({ params, searchParams }: PageProps<"/adm
         documents={documents}
       />
     </PageContainer>
+  )
+}
+
+/** Shell estático + conteúdo dependente da URL em Suspense (navegação instantânea). */
+export default function RulePage(props: PageProps<"/admin/regras/[id]">) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <RulePageContent {...props} />
+    </Suspense>
   )
 }

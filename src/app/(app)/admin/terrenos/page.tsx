@@ -1,7 +1,9 @@
 import { Plus, TriangleAlert } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { FictitiousBadge, LandStatusBadge } from "@/components/admin/badges"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { Button } from "@/components/ui/button"
@@ -18,7 +20,7 @@ import { listLands } from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Land Bank" }
 
-export default async function LandsPage() {
+async function LandsPageContent() {
   const lands = await listLands()
 
   return (
@@ -132,5 +134,13 @@ function ZoneCell({
         </span>
       )}
     </span>
+  )
+}
+
+export default function LandsPage() {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <LandsPageContent />
+    </Suspense>
   )
 }

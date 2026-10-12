@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { CoverageBadge } from "@/components/admin/badges"
 import { MunicipalityForm } from "@/components/admin/municipality-forms"
 import { PageContainer, PageHeader, Section } from "@/components/admin/page-header"
@@ -20,7 +22,7 @@ export const metadata: Metadata = { title: "Municípios" }
 /** Conta de relação aninhada do PostgREST: [{ count: n }]. */
 const count = (rel: { count: number }[] | null | undefined) => rel?.[0]?.count ?? 0
 
-export default async function MunicipalitiesPage() {
+async function MunicipalitiesPageContent() {
   const municipalities = await listMunicipalities()
 
   return (
@@ -77,5 +79,13 @@ export default async function MunicipalitiesPage() {
         <MunicipalityForm action={createMunicipality} submitLabel="Cadastrar município" />
       </Section>
     </PageContainer>
+  )
+}
+
+export default function MunicipalitiesPage() {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <MunicipalitiesPageContent />
+    </Suspense>
   )
 }

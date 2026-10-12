@@ -1,7 +1,9 @@
 import { Plus } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { RuleStatusBadge } from "@/components/admin/badges"
 import { PageContainer, PageHeader, Section } from "@/components/admin/page-header"
 import { ZoneForm } from "@/components/admin/zone-form"
@@ -23,7 +25,7 @@ export const metadata: Metadata = { title: "Zona" }
 
 const count = (rel: { count: number }[] | null | undefined) => rel?.[0]?.count ?? 0
 
-export default async function ZonePage({ params }: PageProps<"/admin/zonas/[id]">) {
+async function ZonePageContent({ params }: PageProps<"/admin/zonas/[id]">) {
   const { id } = await params
   const zone = await getZone(id)
   const [documents, zones, rules] = await Promise.all([
@@ -136,5 +138,14 @@ export default async function ZonePage({ params }: PageProps<"/admin/zonas/[id]"
         submitLabel="Salvar zona"
       />
     </PageContainer>
+  )
+}
+
+/** Shell estático + conteúdo dependente da URL em Suspense (navegação instantânea). */
+export default function ZonePage(props: PageProps<"/admin/zonas/[id]">) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <ZonePageContent {...props} />
+    </Suspense>
   )
 }

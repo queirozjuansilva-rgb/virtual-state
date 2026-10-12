@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { z } from "zod"
+import { Suspense } from "react"
 
+import AdminLoading from "@/app/(app)/admin/loading"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { ZoneForm } from "@/components/admin/zone-form"
 import { saveZone } from "@/server/admin/actions"
@@ -9,7 +11,7 @@ import { getMunicipality, listLegalDocuments, listZones } from "@/server/admin/q
 
 export const metadata: Metadata = { title: "Nova zona" }
 
-export default async function NewZonePage({ searchParams }: PageProps<"/admin/zonas/nova">) {
+async function NewZonePageContent({ searchParams }: PageProps<"/admin/zonas/nova">) {
   const { municipio } = await searchParams
   const parsed = z.uuid().safeParse(municipio)
   if (!parsed.success) notFound()
@@ -32,5 +34,14 @@ export default async function NewZonePage({ searchParams }: PageProps<"/admin/zo
         submitLabel="Cadastrar zona"
       />
     </PageContainer>
+  )
+}
+
+/** Shell estático + conteúdo dependente da URL em Suspense (navegação instantânea). */
+export default function NewZonePage(props: PageProps<"/admin/zonas/nova">) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <NewZonePageContent {...props} />
+    </Suspense>
   )
 }

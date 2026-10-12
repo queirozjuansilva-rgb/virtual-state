@@ -16,4 +16,11 @@ Leia `docs/PRD.md` antes de qualquer trabalho de produto. ADRs em `docs/adr/`.
 - Cache Components está ligado: leitura de sessão/cookies/searchParams fica dentro de `<Suspense>`. Use `getCurrentUser()`/`requireUser()` de `src/lib/auth/dal.ts`.
 - Regras de negócio sem definição do cliente: use um default razoável e marque `// TODO(cliente):`.
 - Antes de instalar dependência nova, justifique em uma linha.
+- Banco: tabelas e colunas genéricas em inglês; parâmetros urbanísticos com o nome técnico em português (`ca_basico`, `to_max`, `recuo_frontal`). Enums em pt-BR sem acento; rótulos em `src/lib/domain/labels.ts`.
+- Geometria entra sempre por função SQL com `ST_GeomFromGeoJSON` (o cast direto de GeoJSON gera SRID 0). Leitura pela coluna gerada `geojson`.
+- Escritas do admin que tocam geometria ou várias tabelas: funções `public.admin_save_*` (SECURITY INVOKER). Helpers de RLS ficam no schema `private`.
+- Formulários: Server Action + Zod (`src/lib/forms`) + `useFormAction` (não reseta o form em erro). Números em pt-BR via `parseDecimal`; percentuais digitados 0–100 e gravados 0–1.
+- Páginas com dados ficam dentro de `<Suspense>` na própria página (validação de navegação instantânea do Next 16). O cliente Supabase do servidor chama `connection()`.
+- Consultas Supabase: use os helpers `rows`/`maybeRow` de `src/server/admin/queries.ts` (um genérico `{ data: T }` no parâmetro faz o TS inferir `never`).
+- Mapa: MapLibre + terra-draw em `src/components/map`; o worker vem de `public/vendor` (copiado no `postinstall`).
 - Branches: `feature/*` → `dev` → `main`. Antes de concluir: `npm run lint && npm run typecheck && npm test`.

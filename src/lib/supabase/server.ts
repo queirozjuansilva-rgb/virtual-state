@@ -2,6 +2,7 @@ import "server-only"
 
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { connection } from "next/server"
 
 import { publicEnv } from "@/lib/env"
 
@@ -9,6 +10,9 @@ import type { Database } from "./database.types"
 
 /** Cliente por requisição. Nunca compartilhe entre requisições. */
 export async function createClient() {
+  // A sessão é validada contra o relógio (expiração do JWT): isso só pode
+  // rodar no request, nunca num prerender/prefetch.
+  await connection()
   const cookieStore = await cookies()
 
   return createServerClient<Database>(

@@ -181,12 +181,15 @@ Não bloqueiam; usar o default e marcar `// TODO(cliente):`.
 
 ## Decisões registradas
 
-| Data       | Decisão                                                                                             |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| 2026-10-11 | Repositório próprio: `queirozjuansilva-rgb/virtual-state`.                                          |
-| 2026-10-11 | Dev usa projeto Supabase na nuvem (`virtual-estate-dev`, sa-east-1), sem Supabase local.            |
-| 2026-10-11 | Contas de serviços em nome da Lugh.                                                                 |
-| 2026-10-11 | Cadastro aberto por enquanto; login por e-mail + senha e por magic link.                            |
-| 2026-10-11 | Um usuário pertence a uma organização (tabela de vínculo mantida para não travar o futuro).         |
-| 2026-10-11 | Município do seed: Fortaleza/CE (geografia real, dados urbanísticos fictícios).                     |
-| 2026-10-11 | Lote em mais de uma zona: usa a zona de maior interseção + flag de risco "lote em múltiplas zonas". |
+| Data       | Decisão                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| 2026-10-11 | Repositório próprio: `queirozjuansilva-rgb/virtual-state`.                                             |
+| 2026-10-11 | Dev usa projeto Supabase na nuvem (`virtual-estate-dev`, sa-east-1), sem Supabase local.               |
+| 2026-10-11 | Contas de serviços em nome da Lugh.                                                                    |
+| 2026-10-11 | Cadastro aberto por enquanto; login por e-mail + senha e por magic link.                               |
+| 2026-10-11 | Um usuário pertence a uma organização (tabela de vínculo mantida para não travar o futuro).            |
+| 2026-10-11 | Município do seed: Fortaleza/CE (geografia real, dados urbanísticos fictícios).                        |
+| 2026-10-11 | Lote em mais de uma zona: usa a zona de maior interseção + flag de risco "lote em múltiplas zonas".    |
+| 2026-10-12 | Por enquanto, a própria equipe atua como engenheiros/analistas; SMTP próprio deixa de ser urgente.     |
+| 2026-10-12 | Conta queirozjuansilva@gmail.com é `admin`. MapTiler: a Lugh vai criar a conta; até lá, OSM só em dev. |
+| 2026-10-12 | CUB-CE do seed: valores públicos (Sinduscon-CE, R8-N, set/25–ago/26).                                  |
