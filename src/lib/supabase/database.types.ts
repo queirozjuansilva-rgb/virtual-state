@@ -1428,6 +1428,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_save_land: {
+        Args: { p_data: Json; p_geojson: Json; p_id: string; p_owner: Json }
+        Returns: string
+      }
+      admin_save_zone: {
+        Args: {
+          p_data: Json
+          p_geojson: Json
+          p_id: string
+          p_replace_geometry: boolean
+        }
+        Returns: string
+      }
+      admin_save_zoning_rule: {
+        Args: {
+          p_data: Json
+          p_id: string
+          p_sources: Json
+          p_validate: boolean
+          p_zone_id: string
+        }
+        Returns: string
+      }
       environmental_hits: {
         Args: { p_geojson: Json; p_municipality_id: string }
         Returns: {

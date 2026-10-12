@@ -4,8 +4,8 @@ import { Loader2 } from "lucide-react"
 import { useActionState } from "react"
 
 import { signUp, type AuthFormState } from "@/app/(auth)/actions"
-import { FormStatus } from "@/components/auth/form-status"
-import { TextField } from "@/components/auth/text-field"
+import { FormStatus } from "@/components/forms/form-status"
+import { TextField } from "@/components/forms/text-field"
 import { Button } from "@/components/ui/button"
 import { FieldGroup } from "@/components/ui/field"
 

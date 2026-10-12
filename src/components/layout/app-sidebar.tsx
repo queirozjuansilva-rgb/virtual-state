@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 
 import { Logo } from "@/components/brand/logo"
+import { AdminNav } from "@/components/layout/admin-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,6 +40,9 @@ export function AppSidebar() {
             <p className="px-2 py-1.5 text-sm text-muted-foreground">Nenhuma análise ainda.</p>
           </SidebarGroupContent>
         </SidebarGroup>
+        <Suspense fallback={null}>
+          <SidebarAdminNav />
+        </Suspense>
       </SidebarContent>
 
       <SidebarFooter className="p-3">
@@ -49,6 +53,11 @@ export function AppSidebar() {
       <SidebarRail />
     </Sidebar>
   )
+}
+
+async function SidebarAdminNav() {
+  const user = await getCurrentUser()
+  return user?.role === "admin" ? <AdminNav /> : null
 }
 
 async function SidebarUser() {
