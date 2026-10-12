@@ -14,6 +14,8 @@ export function crumbsFor(pathname: string): Crumb[] {
   const p = pathname.replace(/\/+$/, "") || "/"
   const routes: [RegExp, Crumb[]][] = [
     [/^\/$/, [{ label: "Painel" }, { label: "Nova análise" }]],
+    [/^\/chat\/[^/]+$/, [{ label: "Painel", href: "/" }, { label: "Análise" }]],
+    [/^\/perfil$/, [{ label: "Perfil do investidor" }]],
     [/^\/admin\/terrenos$/, [ADMIN, { label: "Land Bank" }]],
     [/^\/admin\/terrenos\/novo$/, [ADMIN, LAND_BANK, { label: "Novo terreno" }]],
     [/^\/admin\/terrenos\/[^/]+$/, [ADMIN, LAND_BANK, { label: "Terreno" }]],

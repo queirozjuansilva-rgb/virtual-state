@@ -3,7 +3,7 @@
 import "maplibre-gl/dist/maplibre-gl.css"
 
 import { Eraser, MousePointer2, PenLine } from "lucide-react"
-import type { Map as MapLibreMap } from "maplibre-gl"
+import type { Map as MapLibreMap, Marker } from "maplibre-gl"
 import { useEffect, useRef, useState } from "react"
 import type { TerraDraw } from "terra-draw"
 
@@ -31,7 +31,13 @@ type GeoMapProps = {
   editable?: boolean
   value?: MultiPolygonGeometry | null
   onChange?: (value: MultiPolygonGeometry | null) => void
+  /** Clique no mapa (ex.: escolher um ponto para o copiloto). */
+  onMapClick?: (ponto: { longitude: number; latitude: number }) => void
+  /** Marcador de um ponto. */
+  marker?: { longitude: number; latitude: number } | null
   className?: string
+  /** Altura do mapa (padrão: h-80 sm:h-96). */
+  mapClassName?: string
 }
 
 type DrawMode = "static" | "polygon" | "select"
@@ -47,19 +53,25 @@ export function GeoMap({
   editable = false,
   value = null,
   onChange,
+  onMapClick,
+  marker = null,
   className,
+  mapClassName,
 }: GeoMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const drawRef = useRef<TerraDraw | null>(null)
   const lastValueKey = useRef<string>("null")
   const onChangeRef = useRef(onChange)
+  const onMapClickRef = useRef(onMapClick)
+  const markerRef = useRef<Marker | null>(null)
   const [ready, setReady] = useState(false)
   const [mode, setMode] = useState<DrawMode>("static")
 
   useEffect(() => {
     onChangeRef.current = onChange
-  }, [onChange])
+    onMapClickRef.current = onMapClick
+  }, [onChange, onMapClick])
 
   // Cria o mapa (e o desenho, no modo edição) uma única vez.
   useEffect(() => {
@@ -79,6 +91,10 @@ export function GeoMap({
         attributionControl: { compact: true },
       })
       map.addControl(new NavigationControl({ showCompass: false }), "top-right")
+      map.on("click", (e) => {
+        onMapClickRef.current?.({ longitude: e.lngLat.lng, latitude: e.lngLat.lat })
+      })
+      if (onMapClickRef.current) map.getCanvas().style.cursor = "crosshair"
       map.once("load", async () => {
         if (cancelled || !map) return
         mapRef.current = map
@@ -104,6 +120,7 @@ export function GeoMap({
       cancelled = true
       drawRef.current?.stop()
       drawRef.current = null
+      markerRef.current = null
       map?.remove()
       mapRef.current = null
     }
@@ -173,6 +190,29 @@ export function GeoMap({
 
   useEffect(() => {
     const map = mapRef.current
+    if (!ready || !map) return
+    if (!marker) {
+      markerRef.current?.remove()
+      markerRef.current = null
+      return
+    }
+    const lngLat: [number, number] = [marker.longitude, marker.latitude]
+    if (markerRef.current) {
+      markerRef.current.setLngLat(lngLat)
+      return
+    }
+    let cancelled = false
+    void import("maplibre-gl").then(({ Marker }) => {
+      if (cancelled || mapRef.current !== map) return
+      markerRef.current = new Marker({ color: "#0d968b" }).setLngLat(lngLat).addTo(map)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [ready, marker])
+
+  useEffect(() => {
+    const map = mapRef.current
     if (!ready || !map || !fitBounds) return
     const [w, s, e, n] = fitBounds
     map.fitBounds(
@@ -236,7 +276,10 @@ export function GeoMap({
         ref={containerRef}
         role="region"
         aria-label={ariaLabel}
-        className="h-80 w-full overflow-hidden rounded-xl border bg-muted sm:h-96"
+        className={cn(
+          "w-full overflow-hidden rounded-xl border bg-muted",
+          mapClassName ?? "h-80 sm:h-96",
+        )}
       />
       {overlays.length > 0 && (
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

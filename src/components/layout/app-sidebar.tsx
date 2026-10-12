@@ -4,6 +4,7 @@ import { Suspense } from "react"
 
 import { Logo } from "@/components/brand/logo"
 import { AdminNav } from "@/components/layout/admin-nav"
+import { ConversasRecentes } from "@/components/layout/conversas-recentes"
 import { UserMenu } from "@/components/layout/user-menu"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,8 +37,9 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Análises recentes</SidebarGroupLabel>
           <SidebarGroupContent>
-            {/* Histórico de conversas entra na Fase 3. */}
-            <p className="px-2 py-1.5 text-sm text-muted-foreground">Nenhuma análise ainda.</p>
+            <Suspense fallback={<SidebarMenuSkeleton />}>
+              <ConversasRecentes />
+            </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>
         <Suspense fallback={null}>

@@ -1,6 +1,7 @@
 "use client"
 
-import { ChevronsUpDown, LogOut } from "lucide-react"
+import { ChevronsUpDown, LogOut, UserRoundCog } from "lucide-react"
+import Link from "next/link"
 
 import { signOut } from "@/app/(auth)/actions"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -56,6 +57,12 @@ export function UserMenu({ user }: { user: CurrentUser }) {
               <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/perfil">
+                <UserRoundCog aria-hidden />
+                Perfil do investidor
+              </Link>
+            </DropdownMenuItem>
             <form action={signOut}>
               <DropdownMenuItem asChild>
                 <button type="submit" className="w-full">
