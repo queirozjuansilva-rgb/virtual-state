@@ -3,4 +3,4 @@
  * comparar resultados com o veredito dos analistas. Suba a versão a cada mudança
  * de fórmula ou default que altere números.
  */
-export const ENGINE_VERSION = "0.0.0"
+export const ENGINE_VERSION = "0.1.0"

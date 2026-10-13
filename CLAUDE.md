@@ -9,7 +9,8 @@ Leia `docs/PRD.md` antes de qualquer trabalho de produto. ADRs em `docs/adr/`.
 - **O LLM nunca calcula números nem inventa parâmetro urbanístico.** Cálculo vem de `src/lib/feasibility` (puro, testado); parâmetros vêm só de regras com `status = 'validado'`.
 - Todo número carrega a **fonte**. Todo relatório traz o disclaimer de estudo preliminar.
 - `src/lib/feasibility` e `src/lib/formula`: TypeScript puro, sem imports de framework/banco/IA (o lint bloqueia). Nada de `eval`/`new Function`.
-- Suba `ENGINE_VERSION` (`src/lib/feasibility/version.ts`) a cada mudança que altere números.
+- Suba `ENGINE_VERSION` (`src/lib/feasibility/version.ts`) a cada mudança que altere números e refaça os casos de conferência (`docs/validacao/`, com cálculo independente em Python e teste que exige igualdade).
+- Métricas e fórmulas do motor: ADR 0007; score de risco: ADR 0008. Defaults ficam em `src/lib/feasibility/defaults.ts` **e** em `feasibility_defaults` (um teste exige que estejam iguais).
 - Zod em toda fronteira (forms, actions, tools, APIs, saída de IA).
 - RLS em todas as tabelas. Migrations em `supabase/migrations/` (SQL versionado); depois de mudar o schema, regenere `src/lib/supabase/database.types.ts`.
 - UI 100% em pt-BR, R$ e m². Ícones: lucide-react.
