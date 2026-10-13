@@ -9,7 +9,7 @@ import path from "node:path"
  * preservar o cache e o raciocínio entre turnos. O arquivo .md entra no bundle
  * do servidor via outputFileTracingIncludes (next.config.ts).
  */
-export const VERSAO_PROMPT = "copiloto.v1"
+export const VERSAO_PROMPT = "copiloto.v2"
 
 let texto: string | null = null
 

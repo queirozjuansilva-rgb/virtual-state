@@ -5,6 +5,7 @@ import { inicioJanela, montarConfig, type LinhaPeso } from "@/server/feasibility
 import type { ContextoTerreno } from "@/server/feasibility/montar-entrada"
 
 import type {
+  CandidatoEndereco,
   DadosCopiloto,
   PontoBruto,
   RegraComZona,
@@ -174,6 +175,35 @@ function pontoDoSeed(longitude: number, latitude: number) {
   )
 }
 
+/**
+ * Geocodificação de teste: endereços fictícios que caem nos pontos do seed.
+ * Qualquer outro endereço não é encontrado.
+ */
+const ENDERECOS: { chave: string; candidato: CandidatoEndereco }[] = [
+  {
+    chave: "rua de teste k",
+    candidato: {
+      descricao: "Rua de Teste K, 10 - Aldeota, Fortaleza - CE",
+      longitude: -38.498,
+      latitude: -3.74,
+      tipo: "address",
+      numero: "10",
+      relevancia: 1,
+    },
+  },
+  {
+    chave: "rua de teste l",
+    candidato: {
+      descricao: "Rua de Teste L - Cocó, Fortaleza - CE",
+      longitude: -38.487,
+      latitude: -3.755,
+      tipo: "address",
+      numero: null,
+      relevancia: 0.8,
+    },
+  },
+]
+
 export type RegistrosFixture = {
   analises: { landId: string | null }[]
   coberturas: { municipio: string; uf: string; endereco: string | null }[]
@@ -312,6 +342,13 @@ export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixtu
     async solicitarCobertura(params) {
       registros.coberturas.push(params)
       return `c0be7a6e-0000-4000-8000-${String(registros.coberturas.length).padStart(12, "0")}`
+    },
+    async geocodificar(endereco) {
+      const texto = endereco
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+      return ENDERECOS.filter((e) => texto.includes(e.chave)).map((e) => e.candidato)
     },
     hoje() {
       return seed.hoje

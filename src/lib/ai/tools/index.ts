@@ -8,6 +8,7 @@ import {
   type Ferramenta,
   type SaidaFerramenta,
 } from "./ferramenta"
+import { localizarEndereco } from "./localizacao"
 import { consultarMercado } from "./mercado"
 import { buscarTerrenos, obterTerreno } from "./terrenos"
 import { calcularViabilidadeTerreno, compararTerrenos, estudarPonto } from "./viabilidade"
@@ -22,6 +23,7 @@ export { ErroFerramenta, type ContextoFerramenta, type SaidaFerramenta } from ".
 export const FERRAMENTAS: readonly Ferramenta[] = [
   buscarTerrenos,
   obterTerreno,
+  localizarEndereco,
   identificarZona,
   consultarParametros,
   buscarLegislacao,

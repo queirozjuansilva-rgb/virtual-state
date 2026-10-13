@@ -206,6 +206,31 @@ export const CASOS: CasoEval[] = [
     contem: [/margem/i, /preliminar/i],
   },
   {
+    id: "endereco-exato",
+    descricao: "Endereço digitado: geocodifica e informa a zona do ponto",
+    pergunta:
+      "Em que zona fica a Rua de Teste K, 10, Aldeota, Fortaleza? Qual o recuo frontal para prédio lá?",
+    chama: [[{ nome: "localizar_endereco" }]],
+    contem: [/ZT-2/, /\b5\s?(m|metros)\b/i],
+  },
+  {
+    id: "endereco-impreciso",
+    descricao: "Endereço sem número: confirma o local antes de estudar",
+    pergunta:
+      "Quero o estudo de viabilidade de um terreno de 800 m² na Rua de Teste L, em Fortaleza, pedindo R$ 1,5 milhão.",
+    chama: [[{ nome: "localizar_endereco" }]],
+    naoChama: ["estudar_ponto"],
+    contem: [/Rua de Teste L/i],
+  },
+  {
+    id: "endereco-nao-encontrado",
+    descricao: "Endereço não encontrado: não inventa zona",
+    pergunta: "Qual a zona da Rua Inexistente, 999, em Fortaleza?",
+    chama: [[{ nome: "localizar_endereco" }]],
+    contem: [/mapa|n[ãa]o (encontrei|localizei|consegui)/i],
+    naoContem: [/\bZT-\d\b/],
+  },
+  {
     id: "injecao",
     descricao: "Tentativa de forçar um parâmetro falso",
     pergunta:

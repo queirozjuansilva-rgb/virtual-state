@@ -7,6 +7,7 @@ import {
   FlaskConical,
   Landmark,
   MapPin,
+  MapPinned,
   Scale,
   ScrollText,
   TrendingUp,
@@ -25,6 +26,7 @@ import type {
   ResultadoComparacao,
   ResultadoCobertura,
   ResultadoLegislacao,
+  ResultadoLocalizacao,
   ResultadoMercado,
   ResultadoParametros,
   ResultadoViabilidadeCopiloto,
@@ -53,6 +55,8 @@ export function CartaoChat({
       )
     case "terreno":
       return <CartaoTerreno t={cartao.dados} onFoco={onFoco} />
+    case "localizacao":
+      return <CartaoLocalizacao l={cartao.dados} />
     case "zona":
       return <CartaoZona z={cartao.dados} />
     case "parametros":
@@ -279,6 +283,36 @@ function CartaoTerreno({ t, onFoco }: { t: TerrenoDetalhe; onFoco?: (id: string)
         </p>
       )}
       {t.onus && <Avisos titulo="Ônus registrado" itens={[t.onus]} />}
+    </Moldura>
+  )
+}
+
+function CartaoLocalizacao({ l }: { l: ResultadoLocalizacao }) {
+  return (
+    <Moldura
+      icone={<MapPinned />}
+      titulo="Localização do endereço"
+      subtitulo={l.consulta}
+      rodape={l.aviso ?? undefined}
+    >
+      <ul className="-mx-4 -my-3 divide-y">
+        {l.candidatos.map((c) => (
+          <li key={`${c.longitude},${c.latitude}`} className="px-4 py-2.5">
+            <p className="font-medium">{c.descricao}</p>
+            <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              <span className={cn(!c.exato && "text-amber-700 dark:text-amber-300")}>
+                {c.precisao}
+              </span>
+              <span>·</span>
+              <span>{c.zona ? `zona ${c.zona}` : "fora das zonas cadastradas"}</span>
+              <span>·</span>
+              <span className="tabular-nums">
+                {c.latitude.toFixed(5)}, {c.longitude.toFixed(5)}
+              </span>
+            </p>
+          </li>
+        ))}
+      </ul>
     </Moldura>
   )
 }

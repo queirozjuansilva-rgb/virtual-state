@@ -79,6 +79,19 @@ export type AmostraPreco = { price_m2: number; is_fictitious: boolean }
 
 export type MunicipioBruto = { id: string; name: string; uf: string; coverage_status: string }
 
+/** Resultado da geocodificação de um endereço digitado. */
+export type CandidatoEndereco = {
+  descricao: string
+  longitude: number
+  latitude: number
+  /** Tipo do lugar encontrado (address, road, poi, neighbourhood, municipality…). */
+  tipo: string
+  /** Número do imóvel, quando o resultado chegou ao número. */
+  numero: string | null
+  /** 0–1: quanto o resultado corresponde ao texto buscado. */
+  relevancia: number
+}
+
 export type RefTerreno = { id?: string; codigo?: string }
 
 export interface DadosCopiloto {
@@ -133,6 +146,8 @@ export interface DadosCopiloto {
     uf: string
     endereco: string | null
   }): Promise<string>
+  /** Geocodifica um endereço no Brasil. null = serviço não configurado. */
+  geocodificar(endereco: string): Promise<CandidatoEndereco[] | null>
   /** Data de hoje (ISO), injetável para testes determinísticos. */
   hoje(): string
 }

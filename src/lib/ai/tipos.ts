@@ -177,6 +177,21 @@ export type ResultadoLegislacao = {
   aviso: string
 }
 
+export type ResultadoLocalizacao = {
+  consulta: string
+  candidatos: {
+    descricao: string
+    /** "endereço exato", "rua (sem número)", "bairro"… */
+    precisao: string
+    exato: boolean
+    longitude: number
+    latitude: number
+    zona: string | null
+    municipio: string | null
+  }[]
+  aviso: string | null
+}
+
 export type ResultadoCobertura = {
   protocolo: string
   municipio: string
@@ -188,6 +203,7 @@ export type ResultadoCobertura = {
 export type Cartao =
   | { tipo: "lista_terrenos"; dados: { terrenos: TerrenoResumo[]; filtros: string } }
   | { tipo: "terreno"; dados: TerrenoDetalhe }
+  | { tipo: "localizacao"; dados: ResultadoLocalizacao }
   | { tipo: "zona"; dados: ResultadoZona }
   | { tipo: "parametros"; dados: ResultadoParametros }
   | { tipo: "mercado"; dados: ResultadoMercado }

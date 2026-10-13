@@ -1,6 +1,6 @@
 # ADR 0009: Copiloto (chat com IA, ferramentas e evals)
 
-- **Status:** aceita (prompt `copiloto.v1`).
+- **Status:** aceita (prompt `copiloto.v2`; a v1 fica no repositório como histórico).
 - **Data:** 2026-10-12
 
 ## Contexto
@@ -28,12 +28,13 @@ O PRD (Módulo 5) pede um chat com Claude, com streaming e tool use, que respond
 
 ### Ferramentas (`src/lib/ai/tools`)
 
-São 10, em ordem fixa:
+São 11, em ordem fixa:
 
 | Ferramenta                          | O que faz                                                                    |
 | ----------------------------------- | ---------------------------------------------------------------------------- |
 | `buscar_terrenos`                   | Busca terrenos do land bank por filtros.                                     |
 | `obter_terreno`                     | Ficha do terreno, com restrições.                                            |
+| `localizar_endereco`                | Endereço digitado → candidatos com coordenadas, precisão e zona.             |
 | `identificar_zona`                  | Zona de um terreno ou de um ponto.                                           |
 | `consultar_parametros_urbanisticos` | Só regras validadas, com lei e artigo de cada campo.                         |
 | `buscar_legislacao`                 | Texto da lei (FTS por enquanto; RAG na Fase 5), marcado como não validado.   |
@@ -63,20 +64,27 @@ Cada ferramenta segue o mesmo contrato:
   - O arquivo fica no Storage (`chat-attachments`, pasta do usuário) e vai uma vez para a Files API.
   - O nome na Files API tem o prefixo do usuário. O servidor confere esse prefixo antes de usar o `file_id`, porque o `file_id` vale para a organização inteira na Anthropic.
   - O usuário só pode alterar `message_id` do anexo (privilégio por coluna).
-- **Localização:** clique no mapa até termos a chave do MapTiler para geocodificar endereços.
+- **Localização:** clique no mapa (alfinete do compositor) ou endereço digitado no chat; a ferramenta `localizar_endereco` geocodifica pela MapTiler (ver abaixo).
+
+### Geocodificação
+
+- **Serviço:** API de geocodificação da MapTiler (`src/server/geo/maptiler.ts`), restrita ao Brasil, em português, até 3 candidatos. Usa a mesma `NEXT_PUBLIC_MAPTILER_KEY` do mapa.
+- **Chave restrita por domínio:** o pedido sai do servidor com `Origin`/`Referer` do `NEXT_PUBLIC_SITE_URL`, para funcionar com a chave limitada aos domínios do app.
+- **Precisão:** só é "endereço exato" o resultado que chegou ao número do imóvel. Candidatos com relevância abaixo de 0,6 são descartados (a busca aproximada devolve ruas parecidas em outras cidades).
+- **Uso:** sem chave, a ferramenta orienta a marcar o ponto no mapa. Nos testes e evals, a fixture responde a endereços fictícios ("Rua de Teste K/L") que caem nos pontos do seed.
 
 ### Prompt e evals
 
-- **Prompt:** `src/lib/ai/prompts/copiloto.v1.md`, com papel, regras, fontes (validado × texto de lei × premissa), falta de dado, perfil, formato, defesa contra injeção, escopo e 5 few-shots. Mudar o texto significa criar uma versão nova (`v2`) e rodar os evals.
+- **Prompt:** `src/lib/ai/prompts/copiloto.v2.md`, com papel, regras, fontes (validado × texto de lei × premissa), falta de dado, perfil, formato, defesa contra injeção, escopo e 5 few-shots. Mudar o texto significa criar uma versão nova e rodar os evals. A v2 acrescentou a regra de endereço: usar `localizar_endereco`, confirmar o local quando a precisão não for de endereço exato e dizer que a zona vale para o ponto localizado.
 - **Evals:** `npm run evals`.
-  - 22 casos em `src/lib/ai/evals/casos.ts`, com o modelo real sobre o snapshot do seed.
+  - 25 casos em `src/lib/ai/evals/casos.ts`, com o modelo real sobre o snapshot do seed.
   - Um caso passa quando chamou as ferramentas esperadas, não chamou as proibidas e o texto bate com os padrões.
   - Todo número relevante da resposta precisa aparecer numa ferramenta, na pergunta ou no contexto (tolerância de 1% para arredondamento).
   - O relatório vai para `docs/validacao/evals-copiloto.md`. Meta: 90%.
 
 ## Consequências
 
-- **Custo e testes:** os evals gastam API (cerca de 22 turnos por rodada) e precisam de `ANTHROPIC_API_KEY`. Os testes unitários usam um cliente falso e o snapshot, então rodam no CI sem custo.
+- **Custo e testes:** os evals gastam API (cerca de 25 turnos por rodada) e precisam de `ANTHROPIC_API_KEY`. Os testes unitários usam um cliente falso e o snapshot, então rodam no CI sem custo.
 - **Fallback:** a recusa refeita em outro modelo roda sem o raciocínio do Sonnet 5.5, o que é aceitável para o chat.
 - **Fora desta fase:**
   - `recomendar_terrenos` (matchmaking) fica para a Fase 6; hoje a recomendação usa `buscar_terrenos` + `comparar_terrenos` + perfil.

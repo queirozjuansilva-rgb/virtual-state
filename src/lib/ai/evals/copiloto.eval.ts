@@ -12,7 +12,7 @@ import { normalizarResposta, numerosSemOrigem } from "./verificacao"
 
 /**
  * Evals do copiloto com o modelo real (npm run evals). Custa chamadas à API:
- * ~22 turnos por rodada. Meta do PRD: ≥ 90% dos casos passando.
+ * ~25 turnos por rodada. Meta do PRD: ≥ 90% dos casos passando.
  */
 
 const META = 0.9

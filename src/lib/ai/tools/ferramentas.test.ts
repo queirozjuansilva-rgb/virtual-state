@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest"
 import { criarDadosFixture } from "../evals/fixture/dados-fixture"
 import type {
   ResultadoComparacao,
+  ResultadoLocalizacao,
   ResultadoMercado,
   ResultadoParametros,
   ResultadoViabilidadeCopiloto,
@@ -36,11 +37,12 @@ async function falhar(nome: string, entrada: unknown) {
 }
 
 describe("definições para a API", () => {
-  it("lista as 10 ferramentas em ordem fixa, com JSON Schema sem $schema", () => {
+  it("lista as 11 ferramentas em ordem fixa, com JSON Schema sem $schema", () => {
     const defs = definicoesFerramentas()
     expect(defs.map((d) => d.name)).toEqual([
       "buscar_terrenos",
       "obter_terreno",
+      "localizar_endereco",
       "identificar_zona",
       "consultar_parametros_urbanisticos",
       "buscar_legislacao",
@@ -223,6 +225,58 @@ describe("terrenos e zona", () => {
     })
     expect(fora.resultado.zona).toBeNull()
     expect(fora.resultado.mensagem).toMatch(/pedido de cobertura/)
+  })
+})
+
+describe("localizar_endereco", () => {
+  it("endereço exato: coordenadas, zona e município", async () => {
+    const { resultado, cartao } = await rodar<ResultadoLocalizacao>("localizar_endereco", {
+      endereco: "Rua de Teste K, 10, Aldeota, Fortaleza/CE",
+    })
+    expect(resultado.candidatos).toEqual([
+      {
+        descricao: "Rua de Teste K, 10 - Aldeota, Fortaleza - CE",
+        precisao: "endereço exato",
+        exato: true,
+        longitude: -38.498,
+        latitude: -3.74,
+        zona: "ZT-2",
+        municipio: "Fortaleza/CE",
+      },
+    ])
+    expect(resultado.aviso).toMatch(/aproximada/)
+    expect(cartao?.tipo).toBe("localizacao")
+  })
+
+  it("rua sem número pede confirmação", async () => {
+    const { resultado } = await rodar<ResultadoLocalizacao>("localizar_endereco", {
+      endereco: "rua de teste L, Fortaleza",
+    })
+    expect(resultado.candidatos[0]).toMatchObject({
+      precisao: "rua (sem número)",
+      exato: false,
+      zona: "ZT-3",
+    })
+    expect(resultado.aviso).toMatch(/confirme com o usuário/)
+  })
+
+  it("endereço não encontrado não gera cartão", async () => {
+    const r = await rodar<ResultadoLocalizacao>("localizar_endereco", {
+      endereco: "Rua Inexistente, 999",
+    })
+    expect(r.resultado.candidatos).toEqual([])
+    expect(r.resultado.aviso).toMatch(/não encontrado/)
+    expect(r.cartao).toBeUndefined()
+  })
+
+  it("sem chave da MapTiler: orienta a marcar no mapa", async () => {
+    const semGeocoder = { ...dados, geocodificar: async () => null }
+    const r = await executarFerramenta(
+      "localizar_endereco",
+      { endereco: "Rua de Teste K, 10" },
+      { dados: semGeocoder },
+    )
+    expect(r).toMatchObject({ ok: false, erro: expect.stringMatching(/marcar o ponto no mapa/) })
   })
 })
 

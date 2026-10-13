@@ -178,7 +178,7 @@ export function Compositor({
               maxLength={8000}
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={teclar}
-              placeholder="Pergunte sobre um terreno, o zoneamento de um local ou a viabilidade de um projeto…"
+              placeholder="Pergunte sobre um terreno, um endereço ou a viabilidade de um projeto…"
               className="field-sizing-content max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-base outline-none placeholder:text-muted-foreground"
             />
             {enviando ? (
