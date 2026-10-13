@@ -19,6 +19,7 @@ import {
 } from "@/server/feasibility/carregar-contexto"
 import { registrarExecucao } from "@/server/feasibility/registro"
 import { geocodificarMapTiler } from "@/server/geo/maptiler"
+import { criarRelatorioDoEstudo } from "@/server/relatorios/criar"
 
 function falhou(etapa: string, error: { message: string } | null) {
   if (error) throw new Error(`Falha ao consultar ${etapa}: ${error.message}`)
@@ -255,6 +256,8 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
       falhou("o pedido de cobertura", error)
       return data!.id
     },
+
+    criarRelatorio: (analysisRunId) => criarRelatorioDoEstudo(supabase, analysisRunId),
 
     geocodificar: geocodificarMapTiler,
 

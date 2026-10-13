@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { Logo } from "@/components/brand/logo"
 import { AdminNav } from "@/components/layout/admin-nav"
 import { ConversasRecentes } from "@/components/layout/conversas-recentes"
+import { MainNav, MainNavFallback } from "@/components/layout/main-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +35,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        <Suspense fallback={<MainNavFallback />}>
+          <MainNav />
+        </Suspense>
         <SidebarGroup>
           <SidebarGroupLabel>Análises recentes</SidebarGroupLabel>
           <SidebarGroupContent>

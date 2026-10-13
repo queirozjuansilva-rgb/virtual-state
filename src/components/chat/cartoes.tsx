@@ -1,7 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import {
   BadgeCheck,
+  FileDown,
+  FileText,
   Building2,
   ChevronRight,
   FlaskConical,
@@ -15,6 +18,7 @@ import {
 } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { AbrirRelatorio } from "@/components/estudo/abrir-relatorio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -29,6 +33,7 @@ import type {
   ResultadoLocalizacao,
   ResultadoMercado,
   ResultadoParametros,
+  ResultadoRelatorio,
   ResultadoViabilidadeCopiloto,
   ResultadoZona,
   TerrenoDetalhe,
@@ -71,6 +76,8 @@ export function CartaoChat({
       return <CartaoLegislacao l={cartao.dados} />
     case "cobertura":
       return <CartaoCobertura c={cartao.dados} />
+    case "relatorio":
+      return <CartaoRelatorio r={cartao.dados} />
   }
 }
 
@@ -681,6 +688,11 @@ function Estudo({ e }: { e: EstudoResumo }) {
         </table>
       )}
       <Avisos itens={e.avisos} />
+      {e.analysis_run_id && (
+        <div className="flex justify-end">
+          <AbrirRelatorio analysisRunId={e.analysis_run_id} size="xs" />
+        </div>
+      )}
     </>
   )
 }
@@ -732,6 +744,28 @@ function CartaoCobertura({ c }: { c: ResultadoCobertura }) {
       selo={<Badge variant="secondary">Protocolo {c.protocolo}</Badge>}
     >
       <p className="text-sm">{c.mensagem}</p>
+    </Moldura>
+  )
+}
+
+function CartaoRelatorio({ r }: { r: ResultadoRelatorio }) {
+  return (
+    <Moldura icone={<FileText />} titulo="Relatório de viabilidade" subtitulo={r.titulo}>
+      <p className="text-sm text-muted-foreground">
+        Variáveis editáveis, recálculo, cenários, fluxo de caixa, versões e exportação em PDF.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="sm">
+          <Link href={r.url}>
+            <FileText aria-hidden /> Abrir relatório
+          </Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
+          <a href={r.pdf_url} download>
+            <FileDown aria-hidden /> Baixar PDF
+          </a>
+        </Button>
+      </div>
     </Moldura>
   )
 }

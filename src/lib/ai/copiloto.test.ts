@@ -167,7 +167,7 @@ describe("executarTurno", () => {
     expect(p.model).toBe("claude-sonnet-5-5")
     expect(p.system).toMatchObject([{ type: "text", cache_control: { type: "ephemeral" } }])
     expect((p.system as { text: string }[])[0].text).toMatch(/copiloto da virtual\.estate/)
-    expect((p.tools as unknown[]).length).toBe(11)
+    expect((p.tools as unknown[]).length).toBe(12)
     expect(p.thinking).toEqual({
       type: "adaptive",
       display: "updates",

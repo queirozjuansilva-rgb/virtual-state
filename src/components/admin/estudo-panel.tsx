@@ -1,9 +1,16 @@
 "use client"
 
-import { Calculator, CircleAlert, Info, Loader2, Trophy, TriangleAlert } from "lucide-react"
+import { Calculator, CircleAlert, Loader2, Trophy } from "lucide-react"
 import { useId, useState, useTransition } from "react"
 
 import { Section } from "@/components/admin/page-header"
+import { AbrirRelatorio } from "@/components/estudo/abrir-relatorio"
+import { DEFINICOES, LIMITANTE, NIVEL } from "@/components/estudo/definicoes"
+import { FatoresRisco } from "@/components/estudo/fatores-risco"
+import { Kpi } from "@/components/estudo/kpi"
+import { ListaAvisos } from "@/components/estudo/lista-avisos"
+import { TabelaCenarios } from "@/components/estudo/tabela-cenarios"
+import { TabelaPremissas } from "@/components/estudo/tabela-premissas"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -23,16 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { LAND_USE } from "@/lib/domain/labels"
-import {
-  ENGINE_VERSION,
-  type Limitante,
-  type Metricas,
-  type NivelRisco,
-  type ResultadoViabilidade,
-  type Uso,
-} from "@/lib/feasibility"
+import { ENGINE_VERSION, type Uso } from "@/lib/feasibility"
 import {
   formatArea,
   formatBRL,
@@ -41,38 +40,9 @@ import {
   formatPercent,
   parseDecimal,
 } from "@/lib/format"
-import { formatarFonte, formatarValorPremissa } from "@/lib/format/fonte"
-import { cn } from "@/lib/utils"
 import { estudarTerreno, type EstudoUso, type RespostaEstudo } from "@/server/feasibility/actions"
 
 const TODOS = "__todos__"
-
-const DEFINICOES = {
-  margem: "Margem líquida = lucro ÷ VGV total (inclui unidades de permuta física).",
-  roi: "ROI = lucro ÷ exposição máxima de caixa (o capital que precisa ser aportado).",
-  tir: "TIR anual equivalente à taxa interna do fluxo de caixa mensal.",
-  payback: "Mês em que o caixa acumulado volta a ficar positivo (nominal).",
-  exposicao: "Maior saldo negativo acumulado do fluxo: o aporte máximo necessário.",
-} as const
-
-const LIMITANTE: Record<Limitante, string> = {
-  coeficiente_aproveitamento: "coeficiente de aproveitamento",
-  taxa_ocupacao: "taxa de ocupação",
-  recuos: "recuos",
-  gabarito: "gabarito",
-}
-
-const NIVEL: Record<NivelRisco, { rotulo: string; classe: string }> = {
-  baixo: { rotulo: "Risco baixo", classe: "border-transparent bg-accent text-accent-foreground" },
-  medio: {
-    rotulo: "Risco médio",
-    classe: "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300",
-  },
-  alto: {
-    rotulo: "Risco alto",
-    classe: "border-destructive/40 bg-destructive/10 text-destructive",
-  },
-}
 
 export function EstudoPanel({
   landId,
@@ -334,23 +304,7 @@ function EstudoCard({ estudo, aberto }: { estudo: EstudoUso; aberto: boolean }) 
 
         {r.cenarios.length > 0 && <TabelaCenarios cenarios={r.cenarios} />}
 
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Fatores de risco (score {r.risco.score} de 100)</h4>
-          {r.risco.flags.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma flag disparou.</p>
-          ) : (
-            <ul className="space-y-1 text-sm">
-              {r.risco.flags.map((f) => (
-                <li key={f.codigo} className="flex items-start gap-2">
-                  <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
-                  <span>
-                    <strong>{f.rotulo}</strong> (+{f.peso}): {f.detalhe}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <FatoresRisco risco={r.risco} />
 
         <ListaAvisos titulo="Avisos" itens={estudo.avisos} />
 
@@ -358,145 +312,14 @@ function EstudoCard({ estudo, aberto }: { estudo: EstudoUso; aberto: boolean }) 
           <summary className="cursor-pointer px-3 py-2 text-sm font-semibold">
             Premissas e fontes ({r.premissas.length})
           </summary>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Premissa</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Fonte</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {r.premissas.map((p) => (
-                  <TableRow key={p.chave}>
-                    <TableCell>{p.rotulo}</TableCell>
-                    <TableCell className="text-right whitespace-nowrap tabular-nums">
-                      {formatarValorPremissa(p)}
-                    </TableCell>
-                    <TableCell className="text-xs whitespace-normal text-muted-foreground">
-                      {formatarFonte(p.fonte)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <TabelaPremissas premissas={r.premissas} />
         </details>
 
-        <p className="text-xs text-muted-foreground italic">{r.disclaimer}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground italic">{r.disclaimer}</p>
+          {estudo.runId && <AbrirRelatorio analysisRunId={estudo.runId} />}
+        </div>
       </div>
     </details>
-  )
-}
-
-function Kpi({
-  rotulo,
-  valor,
-  definicao,
-  negativo,
-}: {
-  rotulo: string
-  valor: string
-  definicao?: string
-  negativo?: boolean
-}) {
-  return (
-    <div className="rounded-lg bg-muted/50 p-3">
-      <dt className="flex items-center gap-1 text-xs text-muted-foreground">
-        {rotulo}
-        {definicao && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" aria-label={`O que é ${rotulo}`} className="rounded-full">
-                <Info className="size-3.5" aria-hidden />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64">{definicao}</TooltipContent>
-          </Tooltip>
-        )}
-      </dt>
-      <dd className={cn("text-lg font-semibold tabular-nums", negativo && "text-destructive")}>
-        {valor}
-      </dd>
-    </div>
-  )
-}
-
-function TabelaCenarios({ cenarios }: { cenarios: ResultadoViabilidade["cenarios"] }) {
-  const ordem = ["conservador", "base", "otimista"] as const
-  const porNome = Object.fromEntries(cenarios.map((c) => [c.cenario, c]))
-  const linhas: [string, (m: Metricas) => string][] = [
-    ["VGV", (m) => formatBRL(m.vgv, { compact: true })],
-    ["Custo total", (m) => formatBRL(m.custoTotal, { compact: true })],
-    ["Lucro", (m) => formatBRL(m.lucro, { compact: true })],
-    ["Margem líquida", (m) => formatPercent(m.margemVgv)],
-    ["ROI", (m) => formatPercent(m.roi)],
-    ["TIR anual", (m) => formatPercent(m.tirAnual)],
-    ["Payback", (m) => (m.paybackMeses === null ? "—" : `${m.paybackMeses} meses`)],
-  ]
-  return (
-    <div className="overflow-x-auto rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Indicador</TableHead>
-            <TableHead className="text-right">Conservador</TableHead>
-            <TableHead className="text-right">Base</TableHead>
-            <TableHead className="text-right">Otimista</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {linhas.map(([rotulo, fmt]) => (
-            <TableRow key={rotulo}>
-              <TableCell>{rotulo}</TableCell>
-              {ordem.map((nome) => (
-                <TableCell
-                  key={nome}
-                  className={cn("text-right tabular-nums", nome === "base" && "font-semibold")}
-                >
-                  {porNome[nome] ? fmt(porNome[nome].metricas) : "—"}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-        Conservador: preço {formatPercent(porNome.conservador?.deltas.preco ?? 0)}, custo +
-        {formatPercent(porNome.conservador?.deltas.custo ?? 0)}, vendas{" "}
-        {formatPercent(porNome.conservador?.deltas.prazoVendas ?? 0)} mais lentas. Otimista: preço +
-        {formatPercent(porNome.otimista?.deltas.preco ?? 0)}, custo{" "}
-        {formatPercent(porNome.otimista?.deltas.custo ?? 0)}, vendas{" "}
-        {formatPercent(Math.abs(porNome.otimista?.deltas.prazoVendas ?? 0))} mais rápidas.
-      </p>
-    </div>
-  )
-}
-
-function ListaAvisos({
-  titulo,
-  itens,
-  destaque,
-}: {
-  titulo: string
-  itens: string[]
-  destaque?: boolean
-}) {
-  if (itens.length === 0) return null
-  return (
-    <div
-      className={cn(
-        "mt-3 rounded-lg border px-3 py-2 text-sm",
-        destaque ? "border-destructive/30 bg-destructive/10" : "bg-muted/40",
-      )}
-    >
-      <p className="font-semibold">{titulo}</p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-5">
-        {itens.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </div>
   )
 }

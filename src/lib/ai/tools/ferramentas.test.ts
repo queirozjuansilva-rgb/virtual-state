@@ -37,7 +37,7 @@ async function falhar(nome: string, entrada: unknown) {
 }
 
 describe("definições para a API", () => {
-  it("lista as 11 ferramentas em ordem fixa, com JSON Schema sem $schema", () => {
+  it("lista as 12 ferramentas em ordem fixa, com JSON Schema sem $schema", () => {
     const defs = definicoesFerramentas()
     expect(defs.map((d) => d.name)).toEqual([
       "buscar_terrenos",
@@ -50,6 +50,7 @@ describe("definições para a API", () => {
       "calcular_viabilidade",
       "comparar_terrenos",
       "estudar_ponto",
+      "gerar_relatorio",
       "solicitar_cobertura",
     ])
     for (const d of defs) {
@@ -379,7 +380,16 @@ describe("viabilidade", () => {
     })
     expect(resultado.terreno_id).toBeNull()
     expect(resultado.estudos[0].status).toBe("ok")
-    expect(dados.registros.analises).toEqual([{ landId: null }])
+    expect(dados.registros.analises).toEqual([
+      {
+        landId: null,
+        contexto: {
+          referencia: "Ponto -3.74000, -38.49800",
+          uso: "residencial_vertical",
+          ponto: { longitude: -38.498, latitude: -3.74 },
+        },
+      },
+    ])
   })
 
   it("ponto sem preço do terreno é recusado pela validação; ponto fora das zonas não roda", async () => {
@@ -394,6 +404,35 @@ describe("viabilidade", () => {
         preco_terreno: 1,
       }),
     ).toMatch(/Nenhuma zona cadastrada/)
+  })
+})
+
+describe("gerar_relatorio", () => {
+  it("cria o relatório do estudo do uso escolhido, com links do relatório e do PDF", async () => {
+    const estudo = await rodar<ResultadoViabilidadeCopiloto>("calcular_viabilidade", {
+      terreno: "VE-0004",
+      uso: "residencial_vertical",
+    })
+    const runId = estudo.resultado.estudos[0].analysis_run_id!
+    const { resultado, cartao } = await rodar<{
+      relatorio_id: string
+      titulo: string
+      url: string
+      pdf_url: string
+    }>("gerar_relatorio", { analysis_run_id: runId })
+    expect(resultado.titulo).toBe("VE-0004 · Residencial vertical")
+    expect(resultado.url).toBe(`/relatorios/${resultado.relatorio_id}`)
+    expect(resultado.pdf_url).toBe(`/relatorios/${resultado.relatorio_id}/pdf`)
+    expect(cartao?.tipo).toBe("relatorio")
+  })
+
+  it("estudo inexistente orienta a rodar o estudo antes", async () => {
+    expect(
+      await falhar("gerar_relatorio", { analysis_run_id: "a0a0a0a0-0000-4000-8000-000000000099" }),
+    ).toMatch(/Rode calcular_viabilidade/)
+    expect(await falhar("gerar_relatorio", { analysis_run_id: "run-1" })).toMatch(
+      /Entrada inválida/,
+    )
   })
 })
 

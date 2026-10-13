@@ -192,6 +192,13 @@ export type ResultadoLocalizacao = {
   aviso: string | null
 }
 
+export type ResultadoRelatorio = {
+  relatorio_id: string
+  titulo: string
+  url: string
+  pdf_url: string
+}
+
 export type ResultadoCobertura = {
   protocolo: string
   municipio: string
@@ -211,6 +218,7 @@ export type Cartao =
   | { tipo: "comparacao"; dados: ResultadoComparacao }
   | { tipo: "legislacao"; dados: ResultadoLegislacao }
   | { tipo: "cobertura"; dados: ResultadoCobertura }
+  | { tipo: "relatorio"; dados: ResultadoRelatorio }
 
 /** Eventos enviados ao navegador (uma linha JSON por evento). */
 export type EventoChat =

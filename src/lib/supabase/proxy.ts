@@ -4,7 +4,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { publicEnv } from "@/lib/env"
 
 /** Rotas acessíveis sem sessão. */
-const PUBLIC_PATHS = ["/login", "/cadastro", "/auth"]
+// "/r": link compartilhado de relatório (somente leitura, sem login).
+const PUBLIC_PATHS = ["/login", "/cadastro", "/auth", "/r"]
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))

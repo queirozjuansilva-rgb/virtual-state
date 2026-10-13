@@ -5,6 +5,7 @@ import {
   type EntradaViabilidade,
   type ResultadoViabilidade,
 } from "@/lib/feasibility"
+import type { ContextoEstudo } from "@/lib/relatorio/tipos"
 import type { Json } from "@/lib/supabase/database.types"
 
 import type { Supabase } from "./carregar-contexto"
@@ -17,6 +18,7 @@ export async function registrarExecucao(
     conversationId?: string | null
     entrada: EntradaViabilidade
     resultado: ResultadoViabilidade
+    contexto: ContextoEstudo
   },
 ): Promise<string | null> {
   const { data, error } = await supabase
@@ -27,6 +29,7 @@ export async function registrarExecucao(
       input: params.entrada as unknown as Json,
       output: params.resultado as unknown as Json,
       engine_version: ENGINE_VERSION,
+      contexto: params.contexto as unknown as Json,
     })
     .select("id")
     .single()

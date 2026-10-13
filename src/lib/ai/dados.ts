@@ -1,4 +1,5 @@
 import type { EntradaViabilidade, ResultadoViabilidade, Uso } from "@/lib/feasibility"
+import type { ContextoEstudo } from "@/lib/relatorio/tipos"
 import type { Enums } from "@/lib/supabase/database.types"
 import type { ConfigMotor } from "@/server/feasibility/config"
 import type { ContextoTerreno, RegraDb } from "@/server/feasibility/montar-entrada"
@@ -140,12 +141,15 @@ export interface DadosCopiloto {
     landId: string | null
     entrada: EntradaViabilidade
     resultado: ResultadoViabilidade
+    contexto: ContextoEstudo
   }): Promise<string | null>
   solicitarCobertura(params: {
     municipio: string
     uf: string
     endereco: string | null
   }): Promise<string>
+  /** Cria (ou reabre) o relatório de um estudo registrado; null se não houver acesso. */
+  criarRelatorio(analysisRunId: string): Promise<{ id: string; titulo: string } | null>
   /** Geocodifica um endereço no Brasil. null = serviço não configurado. */
   geocodificar(endereco: string): Promise<CandidatoEndereco[] | null>
   /** Data de hoje (ISO), injetável para testes determinísticos. */
