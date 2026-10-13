@@ -197,7 +197,9 @@ export async function executarTurno(o: OpcoesTurno): Promise<ResultadoTurno> {
       await responderChamadas(msg, "Turno recusado; a ferramenta não foi executada.")
       break
     }
-    resultado.texto += textoDoAssistente(msg.content)
+    const texto = textoDoAssistente(msg.content)
+    // Cada passo é uma mensagem separada na tela; no texto do turno, um parágrafo.
+    resultado.texto += resultado.texto && texto ? `\n\n${texto}` : texto
 
     if (msg.stop_reason === "pause_turn") continue
     const chamadas = msg.content.filter((b) => b.type === "tool_use")
