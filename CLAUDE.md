@@ -24,4 +24,6 @@ Leia `docs/PRD.md` antes de qualquer trabalho de produto. ADRs em `docs/adr/`.
 - Páginas com dados ficam dentro de `<Suspense>` na própria página (validação de navegação instantânea do Next 16). O cliente Supabase do servidor chama `connection()`.
 - Consultas Supabase: use os helpers `rows`/`maybeRow` de `src/server/admin/queries.ts` (um genérico `{ data: T }` no parâmetro faz o TS inferir `never`).
 - Mapa: MapLibre + terra-draw em `src/components/map`; o worker vem de `public/vendor` (copiado no `postinstall`).
+- Copiloto (ADR 0009): ferramentas em `src/lib/ai/tools` (zod + `DadosCopiloto`, nunca Supabase direto), prompt versionado em `src/lib/ai/prompts/copiloto.vN.md` (mudou o texto → nova versão + `npm run evals`). Histórico append-only: nunca edite mensagens gravadas nem mude prompt/ferramentas no meio da conversa. Se o seed mudar, regenere `src/lib/ai/evals/fixture/seed.json`.
+- Chave da Anthropic só no servidor (`ANTHROPIC_API_KEY`); nunca em `NEXT_PUBLIC_*`.
 - Branches: `feature/*` → `dev` → `main`. Antes de concluir: `npm run lint && npm run typecheck && npm test`.

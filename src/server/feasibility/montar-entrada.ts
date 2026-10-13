@@ -80,7 +80,8 @@ export type ContextoTerreno = {
   hitsAmbientais: {
     kind: Enums<"environmental_layer_kind">
     name: string
-    overlap_m2: number
+    /** Null quando a análise é de um ponto (sem polígono do lote). */
+    overlap_m2: number | null
     is_fictitious: boolean
   }[]
   /** CUB mais recente da UF por padrão. */
@@ -191,7 +192,7 @@ export function montarEntrada(ctx: ContextoTerreno, opcoes: OpcoesEstudo): Entra
   if (area === null || !(area > 0)) pendencias.push("Área do terreno não informada.")
   const restricoes: EntradaViabilidade["terreno"]["restricoes"] = ctx.hitsAmbientais.map((h) => ({
     tipo: TIPO_RESTRICAO[h.kind],
-    sobreposicaoM2: Number(h.overlap_m2),
+    sobreposicaoM2: h.overlap_m2 === null ? null : Number(h.overlap_m2),
     origem: `${h.name}${h.is_fictitious ? " (camada fictícia)" : ""}`,
   }))
   const checklist: [boolean, TipoRestricao][] = [

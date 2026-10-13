@@ -195,3 +195,6 @@ Não bloqueiam; usar o default e marcar `// TODO(cliente):`.
 | 2026-10-12 | CUB-CE do seed: valores públicos (Sinduscon-CE, R8-N, set/25–ago/26).                                                                               |
 | 2026-10-12 | Métricas do motor: margem = lucro ÷ VGV total; ROI = lucro ÷ exposição máxima de caixa; TIR anualizada do fluxo mensal; payback nominal (ADR 0007). |
 | 2026-10-12 | Sem os estudos do Gabriel, o caso-01 é um cálculo independente da Lugh, marcado "a conferir".                                                       |
+| 2026-10-12 | Copiloto com `claude-sonnet-5-5` (trocável por `ANTHROPIC_MODEL`); fallback de recusa no servidor ligado por padrão (ADR 0009).                     |
+| 2026-10-12 | Localização no chat por clique no mapa até a chave do MapTiler; `recomendar_terrenos` fica para a Fase 6 e `gerar_relatorio` para a Fase 4.         |
+| 2026-10-13 | Com a chave da MapTiler, o copiloto também localiza endereços digitados (`localizar_endereco`, prompt `copiloto.v2`).                               |

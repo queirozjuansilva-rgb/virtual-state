@@ -126,6 +126,7 @@ export type Database = {
           id: string
           message_id: string | null
           mime_type: string
+          provider_file_id: string | null
           size_bytes: number
           storage_path: string
           uploaded_by: string
@@ -137,6 +138,7 @@ export type Database = {
           id?: string
           message_id?: string | null
           mime_type: string
+          provider_file_id?: string | null
           size_bytes: number
           storage_path: string
           uploaded_by?: string
@@ -148,6 +150,7 @@ export type Database = {
           id?: string
           message_id?: string | null
           mime_type?: string
+          provider_file_id?: string | null
           size_bytes?: number
           storage_path?: string
           uploaded_by?: string
@@ -1451,9 +1454,37 @@ export type Database = {
         }
         Returns: string
       }
+      analisar_ponto: { Args: { p_lat: number; p_lon: number }; Returns: Json }
+      buscar_texto_legal: {
+        Args: { p_limit?: number; p_municipality_id: string; p_query: string }
+        Returns: {
+          article: string
+          content: string
+          documento: string
+          is_fictitious: boolean
+          legal_document_id: string
+          rank: number
+        }[]
+      }
       comparables_near_land: {
         Args: {
           p_land_id: string
+          p_radius_m: number
+          p_since: string
+          p_typology: Database["public"]["Enums"]["comparable_typology"]
+        }
+        Returns: {
+          distance_m: number
+          id: string
+          is_fictitious: boolean
+          observed_on: string
+          price_m2: number
+        }[]
+      }
+      comparables_near_point: {
+        Args: {
+          p_lat: number
+          p_lon: number
           p_radius_m: number
           p_since: string
           p_typology: Database["public"]["Enums"]["comparable_typology"]
@@ -1561,7 +1592,7 @@ export type Database = {
         | "resolucao"
         | "instrucao_normativa"
         | "outro"
-      message_role: "user" | "assistant" | "tool"
+      message_role: "user" | "assistant" | "tool" | "system"
       negotiation_type:
         | "dinheiro"
         | "permuta_fisica"
@@ -1761,7 +1792,7 @@ export const Constants = {
         "instrucao_normativa",
         "outro",
       ],
-      message_role: ["user", "assistant", "tool"],
+      message_role: ["user", "assistant", "tool", "system"],
       negotiation_type: [
         "dinheiro",
         "permuta_fisica",

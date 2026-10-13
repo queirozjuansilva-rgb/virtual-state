@@ -5,16 +5,15 @@ import { z } from "zod"
 import { requireUser } from "@/lib/auth/dal"
 import {
   calcularViabilidade,
-  ENGINE_VERSION,
   ranquearUsos,
   type CandidatoRanqueado,
   type ResultadoViabilidade,
   type Uso,
 } from "@/lib/feasibility"
-import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 import { carregarContexto } from "./carregar-contexto"
+import { registrarExecucao } from "./registro"
 import { montarEntrada } from "./montar-entrada"
 
 const USOS = [
@@ -89,23 +88,17 @@ export async function estudarTerreno(pedido: PedidoEstudo): Promise<RespostaEstu
       continue
     }
     const resultado = calcularViabilidade(montada.entrada)
-    const { data: run, error } = await supabase
-      .from("analysis_runs")
-      .insert({
-        land_id: landId,
-        input: montada.entrada as unknown as Json,
-        output: resultado as unknown as Json,
-        engine_version: ENGINE_VERSION,
-      })
-      .select("id")
-      .single()
-    if (error) console.error("Falha ao registrar analysis_run:", error.message)
+    const runId = await registrarExecucao(supabase, {
+      landId,
+      entrada: montada.entrada,
+      resultado,
+    })
     estudos.push({
       uso: u,
       ok: true,
       resultado,
       avisos: [...montada.avisos, ...resultado.avisos],
-      runId: run?.id ?? null,
+      runId,
     })
   }
 
