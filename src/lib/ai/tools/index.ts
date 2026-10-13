@@ -10,6 +10,7 @@ import {
 } from "./ferramenta"
 import { localizarEndereco } from "./localizacao"
 import { consultarMercado } from "./mercado"
+import { gerarRelatorio } from "./relatorio"
 import { buscarTerrenos, obterTerreno } from "./terrenos"
 import { calcularViabilidadeTerreno, compararTerrenos, estudarPonto } from "./viabilidade"
 import { buscarLegislacao, consultarParametros, identificarZona } from "./zoneamento"
@@ -31,6 +32,7 @@ export const FERRAMENTAS: readonly Ferramenta[] = [
   calcularViabilidadeTerreno,
   compararTerrenos,
   estudarPonto,
+  gerarRelatorio,
   solicitarCobertura,
 ]
 

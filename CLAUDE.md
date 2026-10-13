@@ -26,4 +26,5 @@ Leia `docs/PRD.md` antes de qualquer trabalho de produto. ADRs em `docs/adr/`.
 - Mapa: MapLibre + terra-draw em `src/components/map`; o worker vem de `public/vendor` (copiado no `postinstall`).
 - Copiloto (ADR 0009): ferramentas em `src/lib/ai/tools` (zod + `DadosCopiloto`, nunca Supabase direto), prompt versionado em `src/lib/ai/prompts/copiloto.vN.md` (mudou o texto → nova versão + `npm run evals`). Histórico append-only: nunca edite mensagens gravadas nem mude prompt/ferramentas no meio da conversa. Se o seed mudar, regenere `src/lib/ai/evals/fixture/seed.json`.
 - Chave da Anthropic só no servidor (`ANTHROPIC_API_KEY`); nunca em `NEXT_PUBLIC_*`.
+- Relatório (ADR 0010): lógica pura em `src/lib/relatorio` (campos editáveis, seções, gráfico, modelo do PDF); página, link público e PDF usam as mesmas seções. Salvar versão sempre recalcula no servidor (o cliente só manda edições). PDF com `@react-pdf/renderer`: não ponha `lineHeight` na `Page` (some com o nº da página) e agrupe título + cabeçalho + 1ª linha de tabela num bloco `wrap={false}`.
 - Branches: `feature/*` → `dev` → `main`. Antes de concluir: `npm run lint && npm run typecheck && npm test`.

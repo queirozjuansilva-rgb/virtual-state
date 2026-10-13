@@ -16,6 +16,11 @@ export function crumbsFor(pathname: string): Crumb[] {
     [/^\/$/, [{ label: "Painel" }, { label: "Nova análise" }]],
     [/^\/chat\/[^/]+$/, [{ label: "Painel", href: "/" }, { label: "Análise" }]],
     [/^\/perfil$/, [{ label: "Perfil do investidor" }]],
+    [/^\/relatorios$/, [{ label: "Relatórios" }]],
+    [
+      /^\/relatorios\/[^/]+$/,
+      [{ label: "Relatórios", href: "/relatorios" }, { label: "Relatório" }],
+    ],
     [/^\/admin\/terrenos$/, [ADMIN, { label: "Land Bank" }]],
     [/^\/admin\/terrenos\/novo$/, [ADMIN, LAND_BANK, { label: "Novo terreno" }]],
     [/^\/admin\/terrenos\/[^/]+$/, [ADMIN, LAND_BANK, { label: "Terreno" }]],

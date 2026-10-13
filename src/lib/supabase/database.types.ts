@@ -1,4 +1,3 @@
-// Gerado por `supabase gen types` (não edite à mão). Rode `npm run db:types`.
 export type Json =
   | string
   | number
@@ -17,6 +16,7 @@ export type Database = {
     Tables: {
       analysis_runs: {
         Row: {
+          contexto: Json
           conversation_id: string | null
           created_at: string
           created_by: string
@@ -28,6 +28,7 @@ export type Database = {
           output: Json
         }
         Insert: {
+          contexto?: Json
           conversation_id?: string | null
           created_at?: string
           created_by?: string
@@ -39,6 +40,7 @@ export type Database = {
           output: Json
         }
         Update: {
+          contexto?: Json
           conversation_id?: string | null
           created_at?: string
           created_by?: string
@@ -1141,6 +1143,7 @@ export type Database = {
       reports: {
         Row: {
           analysis_run_id: string | null
+          contexto: Json
           created_at: string
           created_by: string
           current_version: number
@@ -1153,6 +1156,7 @@ export type Database = {
         }
         Insert: {
           analysis_run_id?: string | null
+          contexto?: Json
           created_at?: string
           created_by?: string
           current_version?: number
@@ -1165,6 +1169,7 @@ export type Database = {
         }
         Update: {
           analysis_run_id?: string | null
+          contexto?: Json
           created_at?: string
           created_by?: string
           current_version?: number
@@ -1497,6 +1502,10 @@ export type Database = {
           price_m2: number
         }[]
       }
+      criar_relatorio: {
+        Args: { p_analysis_run_id: string; p_titulo: string }
+        Returns: string
+      }
       environmental_hits: {
         Args: { p_geojson: Json; p_municipality_id: string }
         Returns: {
@@ -1537,6 +1546,30 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      relatorio_compartilhado: { Args: { p_token: string }; Returns: Json }
+      revisoes_do_relatorio: {
+        Args: { p_report_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          report_version_id: string
+          revisor: string
+          verdict: Database["public"]["Enums"]["review_verdict"]
+          versao: number
+        }[]
+      }
+      salvar_versao_relatorio: {
+        Args: {
+          p_analysis_run_id: string
+          p_engine_version: string
+          p_input: Json
+          p_output: Json
+          p_report_id: string
+          p_versao_base: number
+        }
+        Returns: number
       }
     }
     Enums: {

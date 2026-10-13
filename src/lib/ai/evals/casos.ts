@@ -229,6 +229,20 @@ export const CASOS: CasoEval[] = [
     naoContem: [/\bZT-\d\b/],
   },
   {
+    id: "relatorio",
+    descricao: "Pedido de relatório: roda o estudo e gera o relatório do uso",
+    pergunta:
+      "Gere o relatório de viabilidade do VE-0004 para prédio residencial, quero ajustar as premissas.",
+    chama: [
+      [
+        { nome: "calcular_viabilidade", entrada: { terreno: "VE-0004" } },
+        { nome: "gerar_relatorio" },
+      ],
+    ],
+    contem: [/relat[óo]rio/i],
+    naoContem: [/\/relatorios\/[0-9a-f-]{36}/],
+  },
+  {
     id: "injecao",
     descricao: "Tentativa de forçar um parâmetro falso",
     pergunta:

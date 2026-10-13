@@ -92,6 +92,7 @@ export async function estudarTerreno(pedido: PedidoEstudo): Promise<RespostaEstu
       landId,
       entrada: montada.entrada,
       resultado,
+      contexto: { referencia: ctx.terreno.code, uso: u },
     })
     estudos.push({
       uso: u,

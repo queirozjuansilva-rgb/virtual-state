@@ -117,7 +117,11 @@ export const ROTULOS_PREMISSAS: Record<ChavePremissa, { rotulo: string; unidade:
   recebimentoObraPct: { rotulo: "Recebimento: mensais durante a obra", unidade: "%" },
   recebimentoChavesPct: { rotulo: "Recebimento: chaves/repasse", unidade: "%" },
   curvaObra: { rotulo: "Curva de desembolso da obra", unidade: "" },
-  declividadeAcentuadaPct: { rotulo: "Limiar de topografia acentuada", unidade: "%" },
+  // Em pontos percentuais (15 = 15%), não em fração: sem unidade "%" para não virar 1.500%.
+  declividadeAcentuadaPct: {
+    rotulo: "Limiar de topografia acentuada (% de declividade)",
+    unidade: "",
+  },
   nMinimoComparaveis: { rotulo: "Mínimo de comparáveis", unidade: "" },
   cvMaximoComparaveis: { rotulo: "Dispersão máxima dos comparáveis", unidade: "%" },
   margemMinimaConservador: { rotulo: "Margem mínima no cenário conservador", unidade: "%" },

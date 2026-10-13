@@ -47,6 +47,7 @@ async function estudar(
   ctx: ContextoTerreno,
   opcoes: OpcoesCopiloto,
   landId: string | null,
+  ponto: { longitude: number; latitude: number } | null = null,
 ): Promise<{ estudos: EstudoResumo[]; resultado: ResultadoViabilidadeCopiloto }> {
   const usos = opcoes.uso
     ? [opcoes.uso]
@@ -73,7 +74,12 @@ async function estudar(
     }
     const resultado = calcularViabilidade(montada.entrada)
     resultados.push(resultado)
-    const runId = await dados.registrarAnalise({ landId, entrada: montada.entrada, resultado })
+    const runId = await dados.registrarAnalise({
+      landId,
+      entrada: montada.entrada,
+      resultado,
+      contexto: { referencia: ctx.terreno.code, uso, ponto },
+    })
     estudos.push(
       resumoEstudo(uso, {
         ok: true,
@@ -169,6 +175,7 @@ export const estudarPonto = ferramenta({
       ctx,
       { uso: e.uso, precoVendaM2: e.preco_venda_m2, usarCaMaximo: e.usar_ca_maximo },
       null,
+      { longitude: e.longitude, latitude: e.latitude },
     )
     return { resultado, cartao: { tipo: "viabilidade", dados: resultado } }
   },

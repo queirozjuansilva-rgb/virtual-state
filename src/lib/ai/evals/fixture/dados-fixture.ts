@@ -1,4 +1,6 @@
+import { LAND_USE } from "@/lib/domain/labels"
 import type { Uso } from "@/lib/feasibility"
+import type { ContextoEstudo } from "@/lib/relatorio/tipos"
 import type { Enums } from "@/lib/supabase/database.types"
 import { contextoDePonto } from "@/server/feasibility/carregar-contexto"
 import { inicioJanela, montarConfig, type LinhaPeso } from "@/server/feasibility/config"
@@ -205,7 +207,7 @@ const ENDERECOS: { chave: string; candidato: CandidatoEndereco }[] = [
 ]
 
 export type RegistrosFixture = {
-  analises: { landId: string | null }[]
+  analises: { landId: string | null; contexto: ContextoEstudo }[]
   coberturas: { municipio: string; uf: string; endereco: string | null }[]
 }
 
@@ -335,13 +337,22 @@ export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixtu
         desde,
       })
     },
-    async registrarAnalise({ landId }) {
-      registros.analises.push({ landId })
-      return `run-${registros.analises.length}`
+    async registrarAnalise({ landId, contexto }) {
+      registros.analises.push({ landId, contexto })
+      return `a0a0a0a0-0000-4000-8000-${String(registros.analises.length).padStart(12, "0")}`
     },
     async solicitarCobertura(params) {
       registros.coberturas.push(params)
       return `c0be7a6e-0000-4000-8000-${String(registros.coberturas.length).padStart(12, "0")}`
+    },
+    async criarRelatorio(analysisRunId) {
+      const i = Number(analysisRunId.slice(-12)) - 1
+      const analise = registros.analises[i]
+      if (!analysisRunId.startsWith("a0a0a0a0-") || !analise) return null
+      return {
+        id: `f0f0f0f0-0000-4000-8000-${analysisRunId.slice(-12)}`,
+        titulo: `${analise.contexto.referencia} · ${LAND_USE[analise.contexto.uso]}`,
+      }
     },
     async geocodificar(endereco) {
       const texto = endereco
