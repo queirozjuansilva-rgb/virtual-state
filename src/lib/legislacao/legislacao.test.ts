@@ -8,7 +8,12 @@ import {
   normalizarParametro,
   type SaidaExtracao,
 } from "./extracao"
-import { fragmentar, LIMITE_CARACTERES, quebrarTextoCorrido, textoParaEmbedding } from "./fragmentar"
+import {
+  fragmentar,
+  LIMITE_CARACTERES,
+  quebrarTextoCorrido,
+  textoParaEmbedding,
+} from "./fragmentar"
 import { precisaDeOcr, separarPaginasOcr } from "./ocr"
 import { interpretarPaginas, resumirPaginas } from "./paginas"
 import { localizarTrecho, trechoEncontrado } from "./trechos"
@@ -129,7 +134,9 @@ Art. 82- Serão aplicados na ZOP 1 os instrumentos previstos nesta Lei, conforme
     ])
     const f = fragmentar([{ numero: 335, texto: corrido }])
     expect(f.map((x) => x.artigo)).toEqual([null, "Art. 18", "Art. 27", "Art. 87"])
-    expect(f.find((x) => x.artigo === "Art. 87")?.secao).toBe("Seção IV Da Zona de Ocupação Consolidada (ZOC)")
+    expect(f.find((x) => x.artigo === "Art. 87")?.secao).toBe(
+      "Seção IV Da Zona de Ocupação Consolidada (ZOC)",
+    )
   })
 
   it("monta o texto do embedding com seção e artigo", () => {

@@ -8,6 +8,7 @@
 O PRD (Módulo 2, Fase 5) pede o pipeline da lei: upload → texto/OCR → trechos e embeddings → extração assistida → revisão → validação. O aceite é uma lei real ingerida e validada de ponta a ponta.
 
 O Master Blueprint Técnico v2.2 (13/10/2026, em `docs/referencias/`) acrescentou exigências:
+
 - evidência completa (página, impressão digital, data de coleta, vigência);
 - conflito entre fontes com resolução documentada;
 - condição ou exceção por parâmetro;
@@ -26,7 +27,7 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
   - só HTTPS na porta padrão;
   - todo IP do host precisa ser público (`src/lib/net/ip.ts`), conferido a cada redirecionamento;
   - até 3 redirecionamentos, 50 MB (PDF) ou 40 MB (GeoJSON), 60 s.
-  - Resta o risco de *DNS rebinding* entre a checagem e a conexão, aceitável para uma ação só de admin.
+  - Resta o risco de _DNS rebinding_ entre a checagem e a conexão, aceitável para uma ação só de admin.
 - **Registro do arquivo:** tamanho, páginas e SHA-256 do arquivo, data de coleta (diferente da vigência) e direito de uso (ex.: CC BY-SA 4.0 do SAPL).
 - **Arquivo novo:** apaga páginas e trechos anteriores.
 
