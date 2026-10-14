@@ -50,6 +50,7 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
 - **Embeddings:** Voyage `voyage-4`, 1024 dimensões, por `fetch` (sem SDK), com `document` para trechos e `query` para a pergunta. O modelo fica salvo por trecho, porque trocar de série exige reindexar.
 - **Busca:** `buscar_texto_legal` é híbrida, juntando palavras e sentido por RRF.
   - Só entram normas vigentes (`effective_from`/`effective_until`), não revogadas por inteiro e não arquivadas.
+  - A parte por palavras tem duas listas: uma com todos os termos e outra com qualquer termo, com nota dividida pelo tamanho do trecho. A pergunta raramente usa as palavras da lei ("coeficiente" × "índice de aproveitamento").
   - Sem chave da Voyage, a busca é só por palavras.
   - O copiloto passa a citar a página do PDF.
 
@@ -85,6 +86,21 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
 - **Arquivamento dos fictícios:** `archived_at` em zonas, camadas, terrenos, comparáveis e leis tira os dados de teste das funções espaciais, da busca, do copiloto e dos estudos. É reversível (`admin_arquivar_ficticios`).
 - **Ponto sem zona urbana dentro de camada municipal** (ex.: ZPA do Cocó): o município passa a vir da camada.
 
+### Relatórios, camadas e mercado (Blueprint v2.2)
+
+- **Relatório desatualizado:** cada estudo guarda a zona usada (gatilho em `analysis_runs`).
+  - Quando a regra daquela zona × uso entra ou sai de "validado", os relatórios afetados ganham `stale_since` e o motivo.
+  - O aviso aparece na página e na lista. PDFs já exportados não mudam.
+  - O gatilho é SECURITY DEFINER porque o admin muda a regra, mas os relatórios são de outras organizações. Ele só grava a marca.
+- **Camada ausente não é "sem restrição":** o motor recebe os tipos de restrição sem camada oficial no município e devolve o aviso de "dados insuficientes". Os números não mudam (motor 0.1.0).
+- **Indicadores agregados de mercado** (CPES do Sinduscon-CE, 2º trimestre de 2026):
+  - O que entra: preço médio de tabela por m² privativo, IVV e oferta por bairro, e o agregado do município, com fonte e página.
+  - Uso: `consultar_mercado` devolve esses dados como contexto e avisa que não são preço do estudo.
+  - Por que só uso interno: não há microdados nem direito de redistribuição (`internal_only`).
+  - Onde não entram: relatório, PDF e link público usam só a entrada do motor, então os indicadores ficam de fora.
+  - Os dados foram carregados direto no banco e não estão no repositório.
+- **CUB-CE:** setembro/2026 vem da página do Sinduscon-CE, que confere com o valor de agosto já cadastrado.
+
 ### Prompts
 
 Ficam em TypeScript (`src/server/legislacao/prompts.ts`), com versão registrada em cada execução. Assim entram no bundle das Server Actions sem configurar `outputFileTracingIncludes` por rota.
@@ -92,7 +108,10 @@ Ficam em TypeScript (`src/server/legislacao/prompts.ts`), com versão registrada
 ## Consequências
 
 - **Sem fila:** OCR e índice andam em lotes chamados pela tela; fechar a aba para o processo, e clicar de novo retoma das páginas pendentes. Uma fila (cron ou Batches API, 50% mais barata) fica para quando houver volume.
-- **Custo medido na LC 62/2009 (437 páginas escaneadas):** ~US$ 0,013 a 0,021 por página no OCR, conforme a densidade do texto. O tempo é dominado pelo modelo.
+- **Custo medido na LC 62/2009 (437 páginas escaneadas):**
+  - OCR: ~US$ 0,013 a 0,021 por página, conforme a densidade do texto, ~US$ 7 no total. O tempo é dominado pelo modelo.
+  - Extração de 6 páginas (16 zonas): US$ 0,42 em 110 s.
+  - Números e comparação com o mapa oficial: `docs/validacao/ingestao-lc-62-2009.md`.
 - **Texto compilado:** Fortaleza não publica o Plano Diretor compilado e atualizado (o do SAPL está "em edição"; o da PGM vai até 2015). A homologação precisa conferir as leis alteradoras, e o aviso na revisão ajuda nisso.
 - **Mapa do terreno:** com milhares de feições oficiais, o mapa do cadastro de terreno deixa de desenhar as camadas (acima de 300). A interseção com o lote continua sendo calculada no banco.
 - **Tipos de camada:** recurso hídrico, área de risco, ZEIS e ZEPH entram como "outra", com o nome explicando. Recurso hídrico não é APP: a faixa de APP depende do caso (Blueprint, p. 9), então o nome diz "verificar APP".
