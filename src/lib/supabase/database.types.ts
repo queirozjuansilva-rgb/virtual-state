@@ -340,6 +340,7 @@ export type Database = {
       }
       environmental_layers: {
         Row: {
+          archived_at: string | null
           created_at: string
           geojson: Json | null
           geom: unknown
@@ -352,6 +353,7 @@ export type Database = {
           source: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           geojson?: Json | null
           geom: unknown
@@ -364,6 +366,7 @@ export type Database = {
           source: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           geojson?: Json | null
           geom?: unknown
@@ -388,6 +391,71 @@ export type Database = {
             columns: ["municipality_id"]
             isOneToOne: false
             referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extraction_runs: {
+        Row: {
+          cost_usd: number | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_tokens: number | null
+          instructions: string | null
+          legal_document_id: string
+          model: string
+          output: Json | null
+          output_tokens: number | null
+          pages: number[]
+          prompt_version: string
+          status: Database["public"]["Enums"]["extraction_status"]
+          target_use: Database["public"]["Enums"]["land_use"]
+        }
+        Insert: {
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number | null
+          instructions?: string | null
+          legal_document_id: string
+          model: string
+          output?: Json | null
+          output_tokens?: number | null
+          pages: number[]
+          prompt_version: string
+          status?: Database["public"]["Enums"]["extraction_status"]
+          target_use: Database["public"]["Enums"]["land_use"]
+        }
+        Update: {
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number | null
+          instructions?: string | null
+          legal_document_id?: string
+          model?: string
+          output?: Json | null
+          output_tokens?: number | null
+          pages?: number[]
+          prompt_version?: string
+          status?: Database["public"]["Enums"]["extraction_status"]
+          target_use?: Database["public"]["Enums"]["land_use"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extraction_runs_legal_document_id_fkey"
+            columns: ["legal_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -589,6 +657,7 @@ export type Database = {
       lands: {
         Row: {
           address: string
+          archived_at: string | null
           area_calculada_m2: number | null
           area_informada_m2: number | null
           area_m2: number | null
@@ -630,6 +699,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          archived_at?: string | null
           area_calculada_m2?: number | null
           area_informada_m2?: number | null
           area_m2?: number | null
@@ -671,6 +741,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          archived_at?: string | null
           area_calculada_m2?: number | null
           area_informada_m2?: number | null
           area_m2?: number | null
@@ -734,8 +805,12 @@ export type Database = {
           content: string
           created_at: string
           embedding: string | null
+          embedding_model: string | null
           id: string
           legal_document_id: string
+          page_end: number | null
+          page_start: number | null
+          section: string | null
           tsv: unknown
         }
         Insert: {
@@ -744,8 +819,12 @@ export type Database = {
           content: string
           created_at?: string
           embedding?: string | null
+          embedding_model?: string | null
           id?: string
           legal_document_id: string
+          page_end?: number | null
+          page_start?: number | null
+          section?: string | null
           tsv?: unknown
         }
         Update: {
@@ -754,8 +833,12 @@ export type Database = {
           content?: string
           created_at?: string
           embedding?: string | null
+          embedding_model?: string | null
           id?: string
           legal_document_id?: string
+          page_end?: number | null
+          page_start?: number | null
+          section?: string | null
           tsv?: unknown
         }
         Relationships: [
@@ -768,57 +851,164 @@ export type Database = {
           },
         ]
       }
+      legal_document_links: {
+        Row: {
+          articles: string | null
+          created_at: string
+          from_document_id: string
+          id: string
+          kind: Database["public"]["Enums"]["legal_link_kind"]
+          notes: string | null
+          to_document_id: string
+        }
+        Insert: {
+          articles?: string | null
+          created_at?: string
+          from_document_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["legal_link_kind"]
+          notes?: string | null
+          to_document_id: string
+        }
+        Update: {
+          articles?: string | null
+          created_at?: string
+          from_document_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["legal_link_kind"]
+          notes?: string | null
+          to_document_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_document_links_from_document_id_fkey"
+            columns: ["from_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_document_links_to_document_id_fkey"
+            columns: ["to_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_document_pages: {
+        Row: {
+          content: string
+          legal_document_id: string
+          method: Database["public"]["Enums"]["page_text_method"]
+          ocr_model: string | null
+          page_number: number
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          legal_document_id: string
+          method: Database["public"]["Enums"]["page_text_method"]
+          ocr_model?: string | null
+          page_number: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          legal_document_id?: string
+          method?: Database["public"]["Enums"]["page_text_method"]
+          ocr_model?: string | null
+          page_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_document_pages_legal_document_id_fkey"
+            columns: ["legal_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legal_documents: {
         Row: {
+          archived_at: string | null
+          collected_at: string | null
           created_at: string
           created_by: string | null
           effective_from: string | null
           effective_until: string | null
+          file_sha256: string | null
+          file_size_bytes: number | null
           id: string
+          ingestion_error: string | null
+          ingestion_status: Database["public"]["Enums"]["ingestion_status"]
+          ingestion_updated_at: string | null
           is_fictitious: boolean
           kind: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id: string
           notes: string | null
           number: string
           official_url: string | null
+          page_count: number | null
           published_on: string | null
           storage_path: string | null
           title: string
           updated_at: string
+          usage_rights: string | null
         }
         Insert: {
+          archived_at?: string | null
+          collected_at?: string | null
           created_at?: string
           created_by?: string | null
           effective_from?: string | null
           effective_until?: string | null
+          file_sha256?: string | null
+          file_size_bytes?: number | null
           id?: string
+          ingestion_error?: string | null
+          ingestion_status?: Database["public"]["Enums"]["ingestion_status"]
+          ingestion_updated_at?: string | null
           is_fictitious?: boolean
           kind: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id: string
           notes?: string | null
           number: string
           official_url?: string | null
+          page_count?: number | null
           published_on?: string | null
           storage_path?: string | null
           title: string
           updated_at?: string
+          usage_rights?: string | null
         }
         Update: {
+          archived_at?: string | null
+          collected_at?: string | null
           created_at?: string
           created_by?: string | null
           effective_from?: string | null
           effective_until?: string | null
+          file_sha256?: string | null
+          file_size_bytes?: number | null
           id?: string
+          ingestion_error?: string | null
+          ingestion_status?: Database["public"]["Enums"]["ingestion_status"]
+          ingestion_updated_at?: string | null
           is_fictitious?: boolean
           kind?: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id?: string
           notes?: string | null
           number?: string
           official_url?: string | null
+          page_count?: number | null
           published_on?: string | null
           storage_path?: string | null
           title?: string
           updated_at?: string
+          usage_rights?: string | null
         }
         Relationships: [
           {
@@ -833,6 +1023,7 @@ export type Database = {
       market_comparables: {
         Row: {
           address: string | null
+          archived_at: string | null
           bedrooms: number | null
           created_at: string
           geom: unknown
@@ -852,6 +1043,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          archived_at?: string | null
           bedrooms?: number | null
           created_at?: string
           geom: unknown
@@ -871,6 +1063,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          archived_at?: string | null
           bedrooms?: number | null
           created_at?: string
           geom?: unknown
@@ -1237,29 +1430,41 @@ export type Database = {
       rule_sources: {
         Row: {
           article: string
+          condition: string | null
           created_at: string
           excerpt: string | null
+          excerpt_verified: boolean | null
           field: string
           id: string
           legal_document_id: string
+          page: number | null
+          resolution_note: string | null
           zoning_rule_id: string
         }
         Insert: {
           article: string
+          condition?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_verified?: boolean | null
           field: string
           id?: string
           legal_document_id: string
+          page?: number | null
+          resolution_note?: string | null
           zoning_rule_id: string
         }
         Update: {
           article?: string
+          condition?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_verified?: boolean | null
           field?: string
           id?: string
           legal_document_id?: string
+          page?: number | null
+          resolution_note?: string | null
           zoning_rule_id?: string
         }
         Relationships: [
@@ -1281,6 +1486,7 @@ export type Database = {
       }
       zones: {
         Row: {
+          archived_at: string | null
           code: string
           created_at: string
           description: string | null
@@ -1294,6 +1500,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           code: string
           created_at?: string
           description?: string | null
@@ -1307,6 +1514,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           code?: string
           created_at?: string
           description?: string | null
@@ -1343,6 +1551,8 @@ export type Database = {
           ca_min: number | null
           created_at: string
           created_by: string | null
+          extracted_values: Json | null
+          extraction_run_id: string | null
           gabarito_m: number | null
           gabarito_pavimentos: number | null
           id: string
@@ -1363,6 +1573,7 @@ export type Database = {
           use_type: Database["public"]["Enums"]["land_use"]
           validated_at: string | null
           validated_by: string | null
+          validation_note: string | null
           zone_id: string
         }
         Insert: {
@@ -1371,6 +1582,8 @@ export type Database = {
           ca_min?: number | null
           created_at?: string
           created_by?: string | null
+          extracted_values?: Json | null
+          extraction_run_id?: string | null
           gabarito_m?: number | null
           gabarito_pavimentos?: number | null
           id?: string
@@ -1391,6 +1604,7 @@ export type Database = {
           use_type: Database["public"]["Enums"]["land_use"]
           validated_at?: string | null
           validated_by?: string | null
+          validation_note?: string | null
           zone_id: string
         }
         Update: {
@@ -1399,6 +1613,8 @@ export type Database = {
           ca_min?: number | null
           created_at?: string
           created_by?: string | null
+          extracted_values?: Json | null
+          extraction_run_id?: string | null
           gabarito_m?: number | null
           gabarito_pavimentos?: number | null
           id?: string
@@ -1419,9 +1635,17 @@ export type Database = {
           use_type?: Database["public"]["Enums"]["land_use"]
           validated_at?: string | null
           validated_by?: string | null
+          validation_note?: string | null
           zone_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "zoning_rules_extraction_run_id_fkey"
+            columns: ["extraction_run_id"]
+            isOneToOne: false
+            referencedRelation: "extraction_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "zoning_rules_zone_id_fkey"
             columns: ["zone_id"]
@@ -1436,6 +1660,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_arquivar_ficticios: {
+        Args: { p_arquivar: boolean; p_municipality_id: string }
+        Returns: Json
+      }
+      admin_gravar_embeddings: {
+        Args: { p_itens: Json; p_modelo: string }
+        Returns: number
+      }
+      admin_importar_camadas: {
+        Args: {
+          p_itens: Json
+          p_kind: Database["public"]["Enums"]["environmental_layer_kind"]
+          p_municipality_id: string
+          p_source: string
+          p_substituir: boolean
+        }
+        Returns: number
+      }
+      admin_importar_zonas: {
+        Args: {
+          p_itens: Json
+          p_legal_document_id?: string
+          p_municipality_id: string
+        }
+        Returns: number
+      }
       admin_save_land: {
         Args: { p_data: Json; p_geojson: Json; p_id: string; p_owner: Json }
         Returns: string
@@ -1459,15 +1709,26 @@ export type Database = {
         }
         Returns: string
       }
+      admin_substituir_trechos: {
+        Args: { p_document_id: string; p_trechos: Json }
+        Returns: number
+      }
       analisar_ponto: { Args: { p_lat: number; p_lon: number }; Returns: Json }
       buscar_texto_legal: {
-        Args: { p_limit?: number; p_municipality_id: string; p_query: string }
+        Args: {
+          p_embedding?: string
+          p_limit?: number
+          p_municipality_id: string
+          p_query: string
+        }
         Returns: {
           article: string
           content: string
           documento: string
           is_fictitious: boolean
           legal_document_id: string
+          page_end: number
+          page_start: number
           rank: number
         }[]
       }
@@ -1597,6 +1858,14 @@ export type Database = {
         | "faixa_dominio"
         | "tombamento"
         | "outro"
+      extraction_status: "em_andamento" | "concluida" | "erro"
+      ingestion_status:
+        | "sem_arquivo"
+        | "enviado"
+        | "paginas"
+        | "fragmentado"
+        | "indexado"
+        | "erro"
       land_document_kind:
         | "matricula"
         | "escritura"
@@ -1625,6 +1894,7 @@ export type Database = {
         | "resolucao"
         | "instrucao_normativa"
         | "outro"
+      legal_link_kind: "altera" | "revoga" | "regulamenta" | "consolida"
       message_role: "user" | "assistant" | "tool" | "system"
       negotiation_type:
         | "dinheiro"
@@ -1632,6 +1902,7 @@ export type Database = {
         | "permuta_financeira"
         | "misto"
       org_kind: "incorporadora" | "construtora" | "investidor" | "outro"
+      page_text_method: "texto" | "ocr" | "pendente"
       review_verdict: "conferido" | "divergente"
       risk_axis: "urbanistico" | "fisico" | "juridico" | "mercado"
       risk_tolerance: "baixa" | "media" | "alta"
@@ -1793,6 +2064,15 @@ export const Constants = {
         "tombamento",
         "outro",
       ],
+      extraction_status: ["em_andamento", "concluida", "erro"],
+      ingestion_status: [
+        "sem_arquivo",
+        "enviado",
+        "paginas",
+        "fragmentado",
+        "indexado",
+        "erro",
+      ],
       land_document_kind: [
         "matricula",
         "escritura",
@@ -1825,6 +2105,7 @@ export const Constants = {
         "instrucao_normativa",
         "outro",
       ],
+      legal_link_kind: ["altera", "revoga", "regulamenta", "consolida"],
       message_role: ["user", "assistant", "tool", "system"],
       negotiation_type: [
         "dinheiro",
@@ -1833,6 +2114,7 @@ export const Constants = {
         "misto",
       ],
       org_kind: ["incorporadora", "construtora", "investidor", "outro"],
+      page_text_method: ["texto", "ocr", "pendente"],
       review_verdict: ["conferido", "divergente"],
       risk_axis: ["urbanistico", "fisico", "juridico", "mercado"],
       risk_tolerance: ["baixa", "media", "alta"],

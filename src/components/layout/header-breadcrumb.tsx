@@ -30,6 +30,7 @@ export function crumbsFor(pathname: string): Crumb[] {
     [/^\/admin\/zonas\/[^/]+$/, [ADMIN, MUNICIPIOS, { label: "Zona" }]],
     [/^\/admin\/zonas\/[^/]+\/regras\/nova$/, [ADMIN, MUNICIPIOS, { label: "Nova regra" }]],
     [/^\/admin\/regras\/[^/]+$/, [ADMIN, MUNICIPIOS, { label: "Regra urbanística" }]],
+    [/^\/admin\/leis\/[^/]+$/, [ADMIN, MUNICIPIOS, { label: "Lei" }]],
   ]
   return routes.find(([re]) => re.test(p))?.[1] ?? [{ label: "Painel" }]
 }

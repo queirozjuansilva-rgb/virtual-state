@@ -310,7 +310,7 @@ export const buscarLegislacao = ferramenta({
   nome: "buscar_legislacao",
   rotulo: "Pesquisando a legislação municipal",
   descricao:
-    "Busca trechos do texto das leis urbanísticas indexadas do município (plano diretor, LUOS etc.) por palavras-chave. Use para explicar conceitos e contexto legal, ou quando não houver parâmetro validado. Trechos de lei NÃO são parâmetros validados: nunca use um número achado aqui como parâmetro do estudo. Informe `terreno` ou `municipio`.",
+    "Busca trechos do texto das leis urbanísticas vigentes indexadas do município (plano diretor, LUOS etc.), por palavras e por sentido. Cada trecho traz lei, artigo e página do PDF oficial. Use para explicar conceitos e contexto legal, ou quando não houver parâmetro validado. Trechos de lei NÃO são parâmetros validados: nunca use um número achado aqui como parâmetro do estudo. Informe `terreno` ou `municipio`.",
   entrada: z.object({
     pergunta: z
       .string()
@@ -330,6 +330,12 @@ export const buscarLegislacao = ferramenta({
       trechos: trechos.map((t) => ({
         documento: t.documento,
         artigo: t.article,
+        paginas:
+          t.page_start === null
+            ? null
+            : t.page_end && t.page_end !== t.page_start
+              ? `p. ${t.page_start}–${t.page_end}`
+              : `p. ${t.page_start}`,
         texto:
           t.content.length > LIMITE_TRECHO ? `${t.content.slice(0, LIMITE_TRECHO)}…` : t.content,
         ficticio: t.is_fictitious,

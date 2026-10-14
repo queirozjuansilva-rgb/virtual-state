@@ -93,3 +93,9 @@ export function toInputNumber(value: number | string | null | undefined, scale =
   if (!Number.isFinite(n)) return ""
   return String(Math.round(n * scale * 1e6) / 1e6).replace(".", ",")
 }
+
+/** Custo de API em dólar, como mostrado ao admin: 5.6 → "US$ 5,60". */
+export function formatUSD(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—"
+  return `US$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}

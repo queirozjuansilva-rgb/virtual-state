@@ -74,6 +74,8 @@ export type TrechoLegal = {
   article: string | null
   content: string
   is_fictitious: boolean
+  page_start: number | null
+  page_end: number | null
 }
 
 export type AmostraPreco = { price_m2: number; is_fictitious: boolean }

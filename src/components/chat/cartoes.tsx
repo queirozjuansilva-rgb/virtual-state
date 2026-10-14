@@ -480,6 +480,9 @@ function CartaoLegislacao({ l }: { l: ResultadoLegislacao }) {
             <p className="flex items-center gap-2 text-xs font-semibold">
               {t.documento}
               {t.artigo && `, ${t.artigo}`}
+              {t.paginas && (
+                <span className="font-normal text-muted-foreground">({t.paginas})</span>
+              )}
               {t.ficticio && <Ficticio />}
             </p>
             <p className="mt-1 line-clamp-4 text-xs text-muted-foreground">{t.texto}</p>

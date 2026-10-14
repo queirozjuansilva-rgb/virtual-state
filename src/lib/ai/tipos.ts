@@ -173,7 +173,14 @@ export type ResultadoComparacao = {
 
 export type ResultadoLegislacao = {
   municipio: string
-  trechos: { documento: string; artigo: string | null; texto: string; ficticio: boolean }[]
+  trechos: {
+    documento: string
+    artigo: string | null
+    /** Páginas do PDF oficial ("p. 77" ou "p. 77–78"), quando a lei foi ingerida. */
+    paginas: string | null
+    texto: string
+    ficticio: boolean
+  }[]
   aviso: string
 }
 

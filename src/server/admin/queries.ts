@@ -3,6 +3,7 @@ import "server-only"
 import { notFound } from "next/navigation"
 
 import { requireAdmin } from "@/lib/auth/dal"
+import type { Enums } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 /**
@@ -69,7 +70,7 @@ export async function listLegalDocuments(municipalityId: string) {
     await supabase
       .from("legal_documents")
       .select(
-        "id, kind, number, title, published_on, effective_from, effective_until, official_url, is_fictitious",
+        "id, kind, number, title, published_on, effective_from, effective_until, official_url, is_fictitious, archived_at, ingestion_status",
       )
       .eq("municipality_id", municipalityId)
       .order("published_on", { ascending: false, nullsFirst: false }),
@@ -83,8 +84,9 @@ export async function listZones(municipalityId: string) {
   return rows(
     await supabase
       .from("zones")
-      .select("id, code, name, kind, geojson, zoning_rules(status)")
+      .select("id, code, name, kind, geojson, archived_at, zoning_rules(status)")
       .eq("municipality_id", municipalityId)
+      .order("archived_at", { ascending: false, nullsFirst: true })
       .order("code"),
   )
 }
@@ -110,8 +112,55 @@ export async function listEnvironmentalLayers(municipalityId: string) {
     await supabase
       .from("environmental_layers")
       .select("id, kind, name, source, geojson, is_fictitious")
-      .eq("municipality_id", municipalityId),
+      .eq("municipality_id", municipalityId)
+      .is("archived_at", null)
+      .limit(50),
   )
+}
+
+/** Camadas de condicionantes agrupadas por fonte (sem geometria: há milhares de feições). */
+export async function summarizeEnvironmentalLayers(municipalityId: string) {
+  const supabase = await adminClient()
+  const todas: {
+    kind: Enums<"environmental_layer_kind">
+    source: string
+    is_fictitious: boolean
+    archived_at: string | null
+  }[] = []
+  for (let de = 0; ; de += 1000) {
+    const lote = rows(
+      await supabase
+        .from("environmental_layers")
+        .select("kind, source, is_fictitious, archived_at")
+        .eq("municipality_id", municipalityId)
+        .range(de, de + 999),
+    )
+    todas.push(...lote)
+    if (lote.length < 1000) break
+  }
+  const grupos = new Map<
+    string,
+    {
+      kind: Enums<"environmental_layer_kind">
+      source: string
+      feicoes: number
+      ficticia: boolean
+      arquivada: boolean
+    }
+  >()
+  for (const l of todas) {
+    const chave = `${l.source}|${l.kind}`
+    const g = grupos.get(chave) ?? {
+      kind: l.kind,
+      source: l.source,
+      feicoes: 0,
+      ficticia: l.is_fictitious,
+      arquivada: Boolean(l.archived_at),
+    }
+    g.feicoes++
+    grupos.set(chave, g)
+  }
+  return [...grupos.values()].sort((a, b) => a.source.localeCompare(b.source))
 }
 
 // Regras ----------------------------------------------------------------------------
@@ -137,13 +186,76 @@ export async function getRule(id: string) {
     await supabase
       .from("zoning_rules")
       .select(
-        `${RULE_COLUMNS}, rule_sources(field, legal_document_id, article, excerpt), zone:zones(id, code, name, municipality_id)`,
+        `${RULE_COLUMNS}, validation_note, extracted_values, extraction_run_id, rule_sources(field, legal_document_id, article, excerpt, page, condition, resolution_note, excerpt_verified), zone:zones(id, code, name, municipality_id), extraction:extraction_runs(id, created_at, legal_document_id)`,
       )
       .eq("id", id)
       .maybeSingle(),
   )
   if (!data) notFound()
   return data
+}
+
+/**
+ * Contexto da revisão lado a lado (Fase 5): regra validada atual da mesma zona
+ * × uso (para diferenças e conflitos), alterações posteriores das normas
+ * citadas e link para a página de cada PDF.
+ */
+export async function getRuleReview(rule: {
+  id: string
+  zone_id: string
+  use_type: Enums<"land_use">
+  status: Enums<"rule_status">
+  rule_sources: { legal_document_id: string }[]
+}) {
+  const supabase = await adminClient()
+  const docIds = [...new Set(rule.rule_sources.map((s) => s.legal_document_id))]
+  const [validada, alteracoes, docs] = await Promise.all([
+    rule.status === "validado"
+      ? Promise.resolve({ data: null })
+      : supabase
+          .from("zoning_rules")
+          .select(`${RULE_COLUMNS}, rule_sources(field, legal_document_id, article)`)
+          .eq("zone_id", rule.zone_id)
+          .eq("use_type", rule.use_type)
+          .eq("status", "validado")
+          .maybeSingle(),
+    docIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from("legal_document_links")
+          .select(
+            "id, kind, articles, to_document_id, por:legal_documents!legal_document_links_from_document_id_fkey(id, kind, number)",
+          )
+          .in("to_document_id", docIds)
+          .in("kind", ["altera", "revoga"]),
+    docIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : supabase.from("legal_documents").select("id, kind, number, storage_path").in("id", docIds),
+  ])
+  const urls: Record<string, string> = {}
+  await Promise.all(
+    (docs.data ?? [])
+      .filter((d) => d.storage_path)
+      .map(async (d) => {
+        const { data } = await supabase.storage
+          .from("legal-documents")
+          .createSignedUrl(d.storage_path!, 3600)
+        if (data) urls[d.id] = data.signedUrl
+      }),
+  )
+  return {
+    validada: validada.data,
+    alteracoes: (alteracoes.data ?? []).map((a) => ({
+      ...a,
+      por: (Array.isArray(a.por) ? a.por[0] : a.por) as {
+        id: string
+        kind: Enums<"legal_document_kind">
+        number: string
+      } | null,
+    })),
+    documentos: Object.fromEntries((docs.data ?? []).map((d) => [d.id, d])),
+    pdfUrls: urls,
+  }
 }
 
 // Terrenos --------------------------------------------------------------------------
@@ -180,17 +292,36 @@ export async function listZoneOptions() {
   return rows(await supabase.from("zones").select("id, code, name, municipality_id").order("code"))
 }
 
-/** Zonas e camadas ambientais de todos os municípios, para o mapa do terreno. */
+/**
+ * Zonas e camadas ambientais para o mapa do terreno. Camadas oficiais podem
+ * ter milhares de feições (Fortaleza: alagados, recursos hídricos, ZPA); acima
+ * de 300 elas saem do desenho do mapa. A interseção com o lote é sempre
+ * calculada no banco (environmental_hits).
+ */
 export async function listGeoReference() {
   const supabase = await adminClient()
-  const [zones, layers] = await Promise.all([
+  const MAX_CAMADAS_NO_MAPA = 300
+  const [zones, { count }] = await Promise.all([
     supabase
       .from("zones")
       .select("id, code, name, municipality_id, geojson")
+      .is("archived_at", null)
       .not("geom", "is", null),
-    supabase.from("environmental_layers").select("id, kind, name, municipality_id, geojson"),
+    supabase
+      .from("environmental_layers")
+      .select("id", { count: "exact", head: true })
+      .is("archived_at", null),
   ])
-  return { zones: rows(zones), layers: rows(layers) }
+  const layers =
+    (count ?? 0) > MAX_CAMADAS_NO_MAPA
+      ? []
+      : rows(
+          await supabase
+            .from("environmental_layers")
+            .select("id, kind, name, municipality_id, geojson")
+            .is("archived_at", null),
+        )
+  return { zones: rows(zones), layers }
 }
 
 export async function getLandEnvironmentalHits(geojson: unknown, municipalityId: string) {
