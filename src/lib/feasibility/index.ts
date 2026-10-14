@@ -12,6 +12,7 @@ import type {
   ResultadoViabilidade,
   ResumoCenario,
   StatusResultado,
+  TipoRestricao,
 } from "./types"
 import { ENGINE_VERSION } from "./version"
 
@@ -35,10 +36,33 @@ const SEM_DELTA: DeltasCenario = { preco: 0, custo: 0, prazoVendas: 0 }
  * Motor de viabilidade (Módulo 4 do PRD, ADR 0007). Função pura: mesma
  * entrada, mesma saída. O LLM nunca calcula números; ele chama esta função.
  */
+const NOME_RESTRICAO: Record<TipoRestricao, string> = {
+  app: "APP",
+  area_alagavel: "área alagável",
+  zona_protecao_ambiental: "zona de proteção ambiental",
+  faixa_nao_edificavel: "faixa não edificável",
+  faixa_dominio: "faixa de domínio",
+  tombamento: "tombamento",
+  servidao: "servidão",
+  outro: "outras restrições",
+}
+
+function listarRestricoes(tipos: readonly TipoRestricao[]): string {
+  const nomes = tipos.map((t) => NOME_RESTRICAO[t])
+  return nomes.length <= 1 ? nomes.join("") : `${nomes.slice(0, -1).join(", ")} e ${nomes.at(-1)}`
+}
+
 export function calcularViabilidade(entrada: EntradaViabilidade): ResultadoViabilidade {
   const { terreno, regra, mercado, premissas } = entrada
   const pendencias: string[] = []
   const avisos: string[] = []
+
+  const semCobertura = terreno.camadasSemCobertura ?? []
+  if (semCobertura.length > 0) {
+    avisos.push(
+      `Sem camada oficial de ${listarRestricoes(semCobertura)} no município: dados insuficientes, não "sem restrição". Verifique na diligência.`,
+    )
+  }
 
   let status: StatusResultado = "ok"
   let potencial: ResultadoViabilidade["potencial"] = null

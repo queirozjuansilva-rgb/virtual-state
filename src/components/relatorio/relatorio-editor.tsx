@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Save,
   SlidersHorizontal,
+  TriangleAlert,
   Undo2,
 } from "lucide-react"
 import Link from "next/link"
@@ -187,6 +188,21 @@ export function RelatorioEditor({
           <Compartilhar relatorioId={relatorio.id} token={relatorio.tokenCompartilhamento} />
         </div>
       </header>
+
+      {relatorio.desatualizado && (
+        <p
+          role="note"
+          className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm"
+        >
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
+          <span>
+            <span className="font-medium">Relatório desatualizado.</span>{" "}
+            {relatorio.desatualizado.motivo ??
+              "A regra urbanística usada mudou depois deste estudo."}{" "}
+            Refaça o estudo para usar a regra vigente; os PDFs já exportados não mudam.
+          </span>
+        </p>
+      )}
 
       {!editavel && (
         <p className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-2 text-sm">

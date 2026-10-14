@@ -52,6 +52,12 @@ export type Terreno = {
   onusRegistrado: boolean
   /** Restrições físico-ambientais (checklist + interseção com camadas). */
   restricoes: { tipo: TipoRestricao; sobreposicaoM2: number | null; origem: string }[]
+  /**
+   * Tipos de restrição sem camada oficial no município. Sem camada, a ausência
+   * de interseção não prova ausência de restrição: o motor avisa "dados
+   * insuficientes" (Blueprint v2.2, p. 7). Opcional em estudos antigos.
+   */
+  camadasSemCobertura?: TipoRestricao[]
   zona: {
     codigo: string | null
     atribuicao: "automatica" | "manual" | "nenhuma"

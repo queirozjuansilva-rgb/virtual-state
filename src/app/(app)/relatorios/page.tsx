@@ -1,4 +1,4 @@
-import { FileText, Link2 } from "lucide-react"
+import { FileText, Link2, TriangleAlert } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -50,6 +50,11 @@ async function Lista() {
           >
             <FileText className="size-4 text-brand" aria-hidden />
             <span className="min-w-0 flex-1 truncate font-medium">{r.titulo}</span>
+            {r.desatualizado && (
+              <Badge variant="outline" className="text-amber-700 dark:text-amber-400">
+                <TriangleAlert aria-hidden /> Desatualizado
+              </Badge>
+            )}
             {r.compartilhado && (
               <Badge variant="outline" className="text-muted-foreground">
                 <Link2 aria-hidden /> Compartilhado

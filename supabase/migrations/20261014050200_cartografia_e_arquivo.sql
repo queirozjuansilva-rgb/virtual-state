@@ -524,3 +524,19 @@ as $$
     )
   )
 $$;
+
+-- Tipos de camada que o município tem (sem arquivadas). Tipo sem camada vira
+-- aviso de "dados insuficientes" no estudo, nunca "sem restrição".
+create function public.tipos_de_camada(p_municipality_id uuid)
+returns setof public.environmental_layer_kind
+language sql
+stable
+set search_path = ''
+as $$
+  select distinct l.kind
+    from public.environmental_layers l
+   where l.municipality_id = p_municipality_id and l.archived_at is null
+$$;
+
+revoke execute on function public.tipos_de_camada(uuid) from public, anon;
+grant execute on function public.tipos_de_camada(uuid) to authenticated;

@@ -26,6 +26,7 @@ export type Database = {
           land_id: string | null
           organization_id: string
           output: Json
+          zone_id: string | null
         }
         Insert: {
           contexto?: Json
@@ -38,6 +39,7 @@ export type Database = {
           land_id?: string | null
           organization_id?: string
           output: Json
+          zone_id?: string | null
         }
         Update: {
           contexto?: Json
@@ -50,6 +52,7 @@ export type Database = {
           land_id?: string | null
           organization_id?: string
           output?: Json
+          zone_id?: string | null
         }
         Relationships: [
           {
@@ -71,6 +74,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_runs_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
             referencedColumns: ["id"]
           },
         ]
@@ -1347,6 +1357,8 @@ export type Database = {
           land_id: string | null
           organization_id: string
           share_token: string | null
+          stale_reason: string | null
+          stale_since: string | null
           title: string
           updated_at: string
         }
@@ -1360,6 +1372,8 @@ export type Database = {
           land_id?: string | null
           organization_id?: string
           share_token?: string | null
+          stale_reason?: string | null
+          stale_since?: string | null
           title: string
           updated_at?: string
         }
@@ -1373,6 +1387,8 @@ export type Database = {
           land_id?: string | null
           organization_id?: string
           share_token?: string | null
+          stale_reason?: string | null
+          stale_since?: string | null
           title?: string
           updated_at?: string
         }
@@ -1838,6 +1854,10 @@ export type Database = {
           p_versao_base: number
         }
         Returns: number
+      }
+      tipos_de_camada: {
+        Args: { p_municipality_id: string }
+        Returns: Database["public"]["Enums"]["environmental_layer_kind"][]
       }
     }
     Enums: {

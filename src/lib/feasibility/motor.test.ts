@@ -318,3 +318,19 @@ describe("Etapa G: melhor uso", () => {
     expect(motivo("servicos")).toBe("Resultado negativo no cenário base.")
   })
 })
+
+describe("cobertura de camadas", () => {
+  it("avisa dados insuficientes quando o município não tem camada de um tipo", () => {
+    const entrada = entradaCaso01()
+    entrada.terreno.camadasSemCobertura = ["app", "faixa_dominio"]
+    const r = calcularViabilidade(entrada)
+    expect(r.avisos).toContain(
+      'Sem camada oficial de APP e faixa de domínio no município: dados insuficientes, não "sem restrição". Verifique na diligência.',
+    )
+  })
+
+  it("estudo antigo, sem o campo, não ganha aviso", () => {
+    const r = calcularViabilidade(entradaCaso01())
+    expect(r.avisos.join(" ")).not.toMatch(/Sem camada oficial/)
+  })
+})

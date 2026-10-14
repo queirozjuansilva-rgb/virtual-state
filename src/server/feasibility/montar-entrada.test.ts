@@ -188,6 +188,21 @@ describe("montarEntrada", () => {
     ])
   })
 
+  it("cobertura de camadas: tipos sem camada no município vão para a entrada", () => {
+    const com = montarEntrada(
+      contexto({}, { camadasDoMunicipio: ["zona_protecao_ambiental", "area_alagavel", "outro"] }),
+      { uso: "residencial_vertical" },
+    )
+    expect(com.ok && com.entrada.terreno.camadasSemCobertura).toEqual([
+      "app",
+      "faixa_dominio",
+      "tombamento",
+    ])
+    // Sem a informação (ex.: evals), não avalia a cobertura.
+    const sem = montarEntrada(contexto(), { uso: "residencial_vertical" })
+    expect(sem.ok && sem.entrada.terreno.camadasSemCobertura).toBeUndefined()
+  })
+
   it("usar CA máximo vira premissa do usuário", () => {
     const m = montarEntrada(contexto(), { uso: "residencial_vertical", usarCaMaximo: true })
     expect(m.ok && m.entrada.premissas.usarCaMaximo).toBe(true)
