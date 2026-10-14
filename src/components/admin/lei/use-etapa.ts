@@ -17,6 +17,7 @@ export function useEtapa() {
   function executar(acao: () => Promise<ResultadoEtapa>, opcoes: { repetir?: boolean } = {}) {
     parar.current = false
     startTransition(async () => {
+      let anterior = Number.POSITIVE_INFINITY
       for (;;) {
         const r = await acao()
         if (!r.ok) {
@@ -30,6 +31,15 @@ export function useEtapa() {
           setProgresso(null)
           return
         }
+        // Rodada sem progresso: para em vez de repetir (e gastar) para sempre.
+        if (restantes >= anterior) {
+          toast.warning(
+            `${r.mensagem} Sem progresso nesta rodada: ${restantes} pendentes. Confira e rode de novo.`,
+          )
+          setProgresso(null)
+          return
+        }
+        anterior = restantes
         setProgresso(`${r.mensagem} Faltam ${restantes}.`)
       }
     })

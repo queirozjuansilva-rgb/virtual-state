@@ -22,17 +22,16 @@ import { useEtapa } from "./use-etapa"
 export function FormExtracao({
   documentoId,
   totalPaginas,
-  custoPorPagina,
+  estimativa: custo,
 }: {
   documentoId: string
   totalPaginas: number
-  custoPorPagina: number | null
+  estimativa: { fixo: number; porPagina: number } | null
 }) {
   const [pending, startTransition] = useTransition()
   const [paginas, setPaginas] = useState("")
   const lidas = interpretarPaginas(paginas, totalPaginas)
-  const estimativa =
-    lidas.ok && custoPorPagina !== null ? custoPorPagina * lidas.paginas.length : null
+  const estimativa = lidas.ok && custo ? custo.fixo + custo.porPagina * lidas.paginas.length : null
 
   function extrair(form: FormData) {
     startTransition(async () => {

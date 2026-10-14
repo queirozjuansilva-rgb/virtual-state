@@ -425,3 +425,102 @@ as $$
    order by f.rank desc
    limit greatest(1, least(p_limit, 10))
 $$;
+
+-- Correção: o recálculo da zona dos terrenos sai da importação (cada chamada
+-- importa poucas zonas, dentro do tempo limite de instrução) e vira uma
+-- função própria, chamada uma vez no fim.
+create or replace function public.admin_importar_zonas(
+  p_municipality_id uuid,
+  p_itens jsonb,
+  p_legal_document_id uuid default null
+)
+returns integer
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_total integer;
+begin
+  if not (select private.is_admin()) then
+    raise exception 'Apenas administradores.' using errcode = '42501';
+  end if;
+
+  insert into public.zones (municipality_id, code, name, kind, description, legal_document_id, geom)
+  select p_municipality_id, left(i ->> 'code', 40), left(i ->> 'name', 200), 'zona',
+         i ->> 'description', p_legal_document_id, g.geom
+    from jsonb_array_elements(p_itens) i
+    cross join lateral (
+      select extensions.st_multi(extensions.st_unaryunion(private.multipolygon_valido(i -> 'geojson'))) as geom
+    ) g
+   where g.geom is not null
+  on conflict (municipality_id, code) do update
+     set name = excluded.name,
+         description = excluded.description,
+         geom = excluded.geom,
+         legal_document_id = coalesce(excluded.legal_document_id, public.zones.legal_document_id),
+         archived_at = null;
+  get diagnostics v_total = row_count;
+  return v_total;
+end;
+$$;
+
+create function public.admin_recalcular_zona_dos_terrenos(p_municipality_id uuid)
+returns integer
+language plpgsql
+set search_path = ''
+as $$
+declare
+  v_total integer;
+begin
+  if not (select private.is_admin()) then
+    raise exception 'Apenas administradores.' using errcode = '42501';
+  end if;
+  update public.lands set geom = geom
+   where municipality_id = p_municipality_id and geom is not null
+     and zone_assignment = 'automatica' and archived_at is null;
+  get diagnostics v_total = row_count;
+  return v_total;
+end;
+$$;
+
+revoke execute on function public.admin_recalcular_zona_dos_terrenos(uuid) from public, anon;
+grant execute on function public.admin_recalcular_zona_dos_terrenos(uuid) to authenticated;
+
+-- Ponto fora das zonas urbanas mas dentro de camada municipal (ex.: ZPA do
+-- Cocó): o município vem da camada. Sem isso, o copiloto dizia "município sem
+-- cobertura" para um ponto numa área de proteção ambiental.
+create or replace function public.analisar_ponto(p_lon double precision, p_lat double precision)
+returns jsonb
+language sql
+stable
+set search_path = ''
+as $$
+  with pt as (
+    select extensions.st_setsrid(extensions.st_makepoint(p_lon, p_lat), 4326) as geom
+  ),
+  zona as (
+    select z.id, z.code, z.name, z.municipality_id
+      from public.zones z, pt
+     where z.archived_at is null and z.geom is not null and extensions.st_contains(z.geom, pt.geom)
+     order by extensions.st_area(z.geom) asc
+     limit 1
+  ),
+  camadas_pt as (
+    select l.kind, l.name, l.is_fictitious, l.municipality_id
+      from public.environmental_layers l, pt
+     where l.archived_at is null and extensions.st_contains(l.geom, pt.geom)
+  ),
+  municipio as (
+    select m.id, m.name, m.uf, m.coverage_status
+      from public.municipalities m
+     where m.id = coalesce((select municipality_id from zona), (select municipality_id from camadas_pt limit 1))
+  )
+  select jsonb_build_object(
+    'zona', (select to_jsonb(zona) from zona),
+    'municipio', (select to_jsonb(municipio) from municipio),
+    'camadas', (
+      select coalesce(jsonb_agg(jsonb_build_object('kind', c.kind, 'name', c.name, 'is_fictitious', c.is_fictitious)), '[]'::jsonb)
+        from camadas_pt c
+    )
+  )
+$$;

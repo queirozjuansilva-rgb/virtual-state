@@ -112,6 +112,7 @@ async function LeiContent({ params }: PageProps<"/admin/leis/[id]">) {
             trechos={lei.trechos}
             voyage={lei.voyage}
             custoOcrPendentes={lei.estimativas.ocrPendentes}
+            paginasDaNorma={doc.norm_pages}
           />
         </Section>
       )}
@@ -125,7 +126,7 @@ async function LeiContent({ params }: PageProps<"/admin/leis/[id]">) {
             <FormExtracao
               documentoId={doc.id}
               totalPaginas={doc.page_count ?? 0}
-              custoPorPagina={lei.estimativas.extracaoPorPagina}
+              estimativa={lei.estimativas.extracao}
             />
             <ListaExecucoes execucoes={lei.execucoes} />
           </Section>

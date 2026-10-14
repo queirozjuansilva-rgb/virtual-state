@@ -24,8 +24,9 @@ import { baixarArquivoOficial } from "@/server/legislacao/download"
  */
 
 const MAX_BYTES_GEOJSON = 40 * 1024 * 1024
-/** Feições por chamada ao banco: mantém cada lote abaixo do tempo limite de instrução. */
+/** Feições e bytes por chamada ao banco: cada lote fica abaixo do tempo limite de instrução. */
 const LOTE = 150
+const LOTE_BYTES = 800 * 1024
 
 type Resultado<T = object> = ({ ok: true; mensagem: string } & T) | { ok: false; erro: string }
 
@@ -51,6 +52,7 @@ async function baixarColecao(url: string) {
 
 function falha(e: unknown): { ok: false; erro: string } {
   if (e instanceof z.ZodError) return { ok: false, erro: "Informe um endereço https:// válido." }
+  console.error("cartografia", e)
   return { ok: false, erro: e instanceof Error ? e.message : "Erro inesperado." }
 }
 
@@ -122,16 +124,31 @@ export async function importarZonas(entrada: z.input<typeof zonasSchema>): Promi
     const codigos = itens.map((i) => i.code)
     if (new Set(codigos).size !== codigos.length)
       return { ok: false, erro: "Há siglas repetidas. Ajuste antes de importar." }
-    const { data, error } = await supabase.rpc("admin_importar_zonas", {
+    // Uma zona por chamada: corrigir e unir a geometria cabe no tempo limite de instrução.
+    let total = 0
+    for (const item of itens) {
+      const { data, error } = await supabase.rpc("admin_importar_zonas", {
+        p_municipality_id: d.municipioId,
+        p_itens: [item] as unknown as Json,
+        p_legal_document_id: (d.documentoId ?? null) as unknown as string,
+      })
+      if (error) {
+        console.error("importarZonas", item.code, error.message)
+        return {
+          ok: false,
+          erro: `Falha ao gravar a zona ${item.code} (${total} já gravadas). Rode de novo.`,
+        }
+      }
+      total += data ?? 0
+    }
+    const { error: e } = await supabase.rpc("admin_recalcular_zona_dos_terrenos", {
       p_municipality_id: d.municipioId,
-      p_itens: itens as unknown as Json,
-      p_legal_document_id: (d.documentoId ?? null) as unknown as string,
     })
-    if (error) return { ok: false, erro: "Não foi possível gravar as zonas." }
+    if (e) console.error("recalcular zona dos terrenos", e.message)
     refresh()
     return {
       ok: true,
-      mensagem: `${data} zona(s) importada(s) ou atualizada(s). A zona dos terrenos foi recalculada.`,
+      mensagem: `${total} zona(s) importada(s) ou atualizada(s). A zona dos terrenos foi recalculada.`,
     }
   } catch (e) {
     return falha(e)
@@ -165,20 +182,39 @@ export async function importarCamada(entrada: z.input<typeof camadaSchema>): Pro
       name: [d.prefixo, f.name].filter(Boolean).join(": ").slice(0, 200),
     }))
     if (itens.length === 0) return { ok: false, erro: "A camada não tem polígonos." }
+    // Lotes de até ~800 KB: rios e lagoas têm feições de mais de 1 MB, e lote
+    // grande estoura o limite de requisição ou o tempo de instrução do banco.
+    const lotes: (typeof itens)[] = []
+    let atual: typeof itens = []
+    let bytes = 0
+    for (const item of itens) {
+      const tamanho = JSON.stringify(item).length
+      if (atual.length > 0 && (bytes + tamanho > LOTE_BYTES || atual.length >= LOTE)) {
+        lotes.push(atual)
+        atual = []
+        bytes = 0
+      }
+      atual.push(item)
+      bytes += tamanho
+    }
+    if (atual.length > 0) lotes.push(atual)
+
     let total = 0
-    for (let i = 0; i < itens.length; i += LOTE) {
+    for (const [n, lote] of lotes.entries()) {
       const { data, error } = await supabase.rpc("admin_importar_camadas", {
         p_municipality_id: d.municipioId,
         p_kind: d.kind as Enums<"environmental_layer_kind">,
         p_source: d.fonte,
-        p_itens: itens.slice(i, i + LOTE) as unknown as Json,
-        p_substituir: i === 0,
+        p_itens: lote as unknown as Json,
+        p_substituir: n === 0,
       })
-      if (error)
+      if (error) {
+        console.error("importarCamada", d.fonte, `lote ${n + 1}/${lotes.length}`, error.message)
         return {
           ok: false,
-          erro: `Falha ao gravar o lote ${i / LOTE + 1}. Importação parcial: rode de novo.`,
+          erro: `Falha ao gravar o lote ${n + 1} de ${lotes.length} (${total} feições já gravadas). Rode de novo.`,
         }
+      }
       total += data ?? 0
     }
     refresh()

@@ -74,7 +74,8 @@ export function ImportarCartografia({
       if (!r.ok) return void toast.error(r.erro)
       setResumo(r.resumo)
       setZonas(r.zonas)
-      if (!fonte) setFonte(fontePadrao(url))
+      // Nova URL (não só troca de atributo): fonte proposta a partir dela.
+      if (!nome) setFonte(fontePadrao(url))
     })
   }
 
@@ -97,7 +98,7 @@ export function ImportarCartografia({
           : await importarCamada({
               municipioId,
               url,
-              kind: form.get("kind") as Enums<"environmental_layer_kind">,
+              kind: form.get("tipo_camada") as Enums<"environmental_layer_kind">,
               atributoNome: atributo,
               prefixo: String(form.get("prefixo") || "") || null,
               fonte,
@@ -195,7 +196,7 @@ export function ImportarCartografia({
             {destino === "camada" ? (
               <>
                 <SelectField
-                  name="kind"
+                  name="tipo_camada"
                   label="Tipo de condicionante"
                   options={TIPOS}
                   defaultValue="zona_protecao_ambiental"

@@ -15,8 +15,15 @@ import { createClient } from "@/lib/supabase/server"
 import { configIngestao, temChaveVoyage } from "./config"
 import { baixarPdfOficial } from "./download"
 import { gerarEmbeddings, TRECHOS_POR_CHAMADA, vetorParaPg } from "./embeddings"
-import { extrairParametros, PAGINAS_POR_CHAMADA_OCR, transcreverPaginas } from "./modelo"
-import { contarPaginas, lerTextoPaginas, MAX_BYTES_PDF, MAX_PAGINAS_PDF, sha256 } from "./pdf"
+import { extrairParametros, PAGINAS_POR_CHAMADA_OCR, transcreverRecorte } from "./modelo"
+import {
+  contarPaginas,
+  lerTextoPaginas,
+  MAX_BYTES_PDF,
+  MAX_PAGINAS_PDF,
+  recortarLotes,
+  sha256,
+} from "./pdf"
 import { mensagemExtracao, VERSAO_PROMPT_EXTRACAO } from "./prompts"
 import { lerPagina, procurarNasPaginas } from "./queries"
 
@@ -27,8 +34,15 @@ import { lerPagina, procurarNasPaginas } from "./queries"
  */
 
 const BUCKET = "legal-documents"
-/** Chamadas de OCR em paralelo por rodada (3 × 4 páginas ≈ 20 s). */
-const OCR_PARALELO = 3
+/** Chamadas de OCR em paralelo por rodada (8 × 4 páginas ≈ 60 s; o tempo é do modelo). */
+const OCR_PARALELO = 8
+
+/**
+ * PDF em memória por documento e impressão digital: o OCR roda dezenas de
+ * rodadas seguidas e baixar 24 MB do Storage a cada uma dominava o tempo.
+ * Em função serverless o cache só vale enquanto a instância estiver quente.
+ */
+const cachePdf = new Map<string, Uint8Array>()
 
 export type ResultadoEtapa =
   { ok: true; mensagem: string; restantes?: number } | { ok: false; erro: string }
@@ -44,7 +58,7 @@ async function documento(supabase: Cliente, id: string) {
   const { data, error } = await supabase
     .from("legal_documents")
     .select(
-      "id, municipality_id, kind, number, title, storage_path, page_count, municipality:municipalities(name, uf)",
+      "id, municipality_id, kind, number, title, storage_path, file_sha256, page_count, municipality:municipalities(name, uf)",
     )
     .eq("id", id)
     .single()
@@ -56,6 +70,19 @@ async function baixarPdf(supabase: Cliente, caminho: string): Promise<Uint8Array
   const { data, error } = await supabase.storage.from(BUCKET).download(caminho)
   if (error || !data) throw new Error("Não foi possível ler o PDF no armazenamento.")
   return new Uint8Array(await data.arrayBuffer())
+}
+
+async function pdfDoDocumento(
+  supabase: Cliente,
+  doc: { storage_path: string; file_sha256: string | null },
+): Promise<Uint8Array> {
+  const chave = `${doc.storage_path}#${doc.file_sha256}`
+  const guardado = cachePdf.get(chave)
+  if (guardado) return guardado
+  const bytes = await baixarPdf(supabase, doc.storage_path)
+  cachePdf.clear() // um documento por vez: o processamento é sequencial
+  cachePdf.set(chave, bytes)
+  return bytes
 }
 
 async function marcarErro(supabase: Cliente, id: string, erro: string) {
@@ -70,6 +97,7 @@ async function marcarErro(supabase: Cliente, id: string, erro: string) {
 }
 
 function falha(e: unknown): { ok: false; erro: string } {
+  console.error("ingestão normativa", e)
   return { ok: false, erro: e instanceof Error ? e.message : "Erro inesperado." }
 }
 
@@ -261,18 +289,25 @@ export async function transcreverProximasPaginas(
     if (pendentes.length === 0)
       return { ok: true, mensagem: "Nenhuma página pendente de OCR.", restantes: 0 }
 
-    const pdf = await baixarPdf(supabase, doc.storage_path)
+    const pdf = await pdfDoDocumento(supabase, {
+      storage_path: doc.storage_path,
+      file_sha256: doc.file_sha256,
+    })
     const lotes: number[][] = []
     for (let i = 0; i < pendentes.length; i += PAGINAS_POR_CHAMADA_OCR) {
       lotes.push(pendentes.slice(i, i + PAGINAS_POR_CHAMADA_OCR).map((p) => p.page_number))
     }
-    const resultados = await Promise.all(lotes.map((l) => transcreverPaginas(pdf, l)))
+    const recortes = await recortarLotes(pdf, lotes)
+    const resultados = await Promise.all(lotes.map((l, i) => transcreverRecorte(recortes[i], l)))
 
     let feitas = 0
     let custo = 0
     for (const r of resultados) {
       custo += r.uso.custoUsd ?? 0
-      const linhas = [...r.paginas].map(([pagina, texto]) => ({
+      // Página que não voltou numa resposta completa não tem texto (em branco
+      // ou só imagem): grava vazia para não ser tentada de novo para sempre.
+      const vazias: [number, string][] = r.truncada ? [] : r.faltando.map((p) => [p, ""])
+      const linhas = [...r.paginas, ...vazias].map(([pagina, texto]) => ({
         legal_document_id: doc.id,
         page_number: pagina,
         method: "ocr" as const,
@@ -333,10 +368,24 @@ export async function marcarParaOcr(
 
 // 4. Trechos para a busca ----------------------------------------------------------------
 
-export async function dividirEmTrechos(documentoId: string): Promise<ResultadoEtapa> {
+export async function dividirEmTrechos(
+  documentoId: string,
+  paginasDaNorma?: string,
+): Promise<ResultadoEtapa> {
   try {
     const supabase = await admin()
     const doc = await documento(supabase, documentoId)
+    // PDF oficial pode trazer o processo legislativo inteiro (projeto, emendas,
+    // votações): só as páginas da norma publicada viram trechos de busca.
+    const intervalo = paginasDaNorma?.trim() || null
+    let soEstas: Set<number> | null = null
+    if (intervalo) {
+      const lidas = interpretarPaginas(intervalo, doc.page_count ?? 0)
+      if (!lidas.ok) return { ok: false, erro: lidas.erro }
+      soEstas = new Set(lidas.paginas)
+    }
+    await supabase.from("legal_documents").update({ norm_pages: intervalo }).eq("id", doc.id)
+
     const paginas: { page_number: number; content: string }[] = []
     for (let de = 0; ; de += 1000) {
       const { data, error } = await supabase
@@ -347,11 +396,12 @@ export async function dividirEmTrechos(documentoId: string): Promise<ResultadoEt
         .order("page_number")
         .range(de, de + 999)
       if (error) throw new Error("Não foi possível ler as páginas.")
-      paginas.push(...data)
+      paginas.push(...data.filter((p) => !soEstas || soEstas.has(p.page_number)))
       if (data.length < 1000) break
     }
-    if (paginas.length === 0)
+    if (paginas.length === 0) {
       return { ok: false, erro: "Nenhuma página com texto. Rode a leitura e o OCR antes." }
+    }
     const trechos = fragmentar(paginas.map((p) => ({ numero: p.page_number, texto: p.content })))
     const { data: total, error } = await supabase.rpc("admin_substituir_trechos", {
       p_document_id: doc.id,
@@ -359,7 +409,10 @@ export async function dividirEmTrechos(documentoId: string): Promise<ResultadoEt
     })
     if (error) throw new Error("Não foi possível gravar os trechos.")
     refresh()
-    return { ok: true, mensagem: `${total} trechos criados a partir de ${paginas.length} páginas.` }
+    return {
+      ok: true,
+      mensagem: `${total} trechos criados a partir de ${paginas.length} páginas${intervalo ? ` (páginas da norma: ${intervalo})` : ""}.`,
+    }
   } catch (e) {
     return falha(e)
   }

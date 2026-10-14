@@ -23,6 +23,8 @@ type Props = {
   trechos: { total: number; indexados: number }
   voyage: boolean
   custoOcrPendentes: number | null
+  /** Páginas que são o texto da norma (o resto do PDF pode ser processo legislativo). */
+  paginasDaNorma: string | null
 }
 
 function Etapa({
@@ -60,6 +62,7 @@ function Etapa({
 export function EtapasIngestao(p: Props) {
   const etapa = useEtapa()
   const [intervalo, setIntervalo] = useState("")
+  const [norma, setNorma] = useState(p.paginasDaNorma ?? "")
   const lidas = p.paginas.texto + p.paginas.ocr + p.paginas.pendente
 
   return (
@@ -107,7 +110,7 @@ export function EtapasIngestao(p: Props) {
             p.paginas.pendente > 0 ? (
               <>
                 {p.paginas.pendente} páginas pendentes · estimativa {formatUSD(p.custoOcrPendentes)}
-                . Transcrição fiel pelo modelo, em lotes de 12 páginas.
+                . Transcrição fiel pelo modelo, em lotes que retomam de onde pararam.
               </>
             ) : lidas > 0 ? (
               "Nenhuma página pendente."
@@ -154,16 +157,27 @@ export function EtapasIngestao(p: Props) {
           feita={p.trechos.total > 0}
           titulo="3. Dividir em trechos para a busca"
           detalhe={
-            p.trechos.total > 0
-              ? `${p.trechos.total} trechos (por artigo, com seção e páginas).`
-              : "Um trecho por artigo; anexos por tamanho."
+            <>
+              {p.trechos.total > 0
+                ? `${p.trechos.total} trechos (por artigo, com seção e páginas).`
+                : "Um trecho por artigo; anexos por tamanho."}{" "}
+              Se o PDF traz o processo legislativo (projeto, emendas, votações), informe só as
+              páginas do texto publicado: versões do projeto não podem virar trecho de busca.
+            </>
           }
         >
+          <Input
+            value={norma}
+            onChange={(e) => setNorma(e.target.value)}
+            placeholder="Páginas da norma: 2-30"
+            aria-label="Páginas que são o texto da norma"
+            className="h-8 w-44"
+          />
           <Button
             size="sm"
             variant={p.trechos.total > 0 ? "outline" : "default"}
             disabled={etapa.pending || p.paginas.texto + p.paginas.ocr === 0}
-            onClick={() => etapa.executar(() => dividirEmTrechos(p.documentoId))}
+            onClick={() => etapa.executar(() => dividirEmTrechos(p.documentoId, norma))}
           >
             {p.trechos.total > 0 ? "Dividir de novo" : "Dividir"}
           </Button>

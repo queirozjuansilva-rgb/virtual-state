@@ -41,14 +41,27 @@ export function custoUsd(modelo: string, entrada: number, saida: number): number
 }
 
 /**
- * Estimativa para a tela, antes de rodar: uma página escaneada custa ~1.600
- * tokens de imagem na entrada e ~900 de texto na saída (medido na LC 62/2009).
+ * Estimativa para a tela, antes de rodar: uma página escaneada de lei custa
+ * ~1.700 tokens de imagem na entrada e ~1.700 de texto na saída (medido na LC
+ * 62/2009: US$ 0,021 por página com o Sonnet 5.5).
  */
 export function estimarCustoOcr(paginas: number): number | null {
-  return custoUsd(configIngestao.INGESTAO_OCR_MODEL, paginas * 1_600 + 1_000, paginas * 900)
+  return custoUsd(configIngestao.INGESTAO_OCR_MODEL, paginas * 1_700 + 1_000, paginas * 1_700)
 }
 
-/** Páginas de texto mandadas à extração: ~1.200 tokens cada, saída ~6.000. */
+/**
+ * Extração: ~4.000 tokens fixos (instruções) + ~3.500 por página de texto na
+ * entrada; ~2.600 de saída por página (raciocínio + JSON). Medido na LC
+ * 62/2009: 6 páginas → 25,5 mil de entrada e 15,8 mil de saída (US$ 0,42).
+ */
 export function estimarCustoExtracao(paginas: number): number | null {
-  return custoUsd(configIngestao.INGESTAO_EXTRACAO_MODEL, paginas * 1_200 + 4_000, 6_000)
+  return custoUsd(configIngestao.INGESTAO_EXTRACAO_MODEL, 4_000 + paginas * 3_500, paginas * 2_600)
+}
+
+/** Parâmetros da estimativa, para a tela calcular enquanto o admin digita as páginas. */
+export function parametrosEstimativaExtracao(): { fixo: number; porPagina: number } | null {
+  const um = estimarCustoExtracao(1)
+  const dois = estimarCustoExtracao(2)
+  if (um === null || dois === null) return null
+  return { fixo: Number((um - (dois - um)).toFixed(4)), porPagina: Number((dois - um).toFixed(4)) }
 }

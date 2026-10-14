@@ -68,18 +68,29 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
         </p>
       )}
       {review.alteracoes.length > 0 && (
-        <div
+        <details
           role="note"
-          className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm"
+          className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm"
         >
-          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
-          <div>
-            <p className="font-medium">
-              Normas citadas têm alterações posteriores. Confira se os artigos usados continuam
-              valendo:
-            </p>
-            <ul className="mt-1 list-disc pl-5">
-              {review.alteracoes.map((a) => (
+          <summary className="flex cursor-pointer list-none items-start gap-2">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden />
+            <span>
+              <span className="font-medium">
+                Normas citadas têm {review.alteracoes.length} alteração(ões) posterior(es).
+              </span>{" "}
+              Confira se os artigos usados continuam valendo
+              {review.alteracoes.some((a) => a.articles) &&
+                ` (artigos indicados: ${review.alteracoes
+                  .filter((a) => a.articles)
+                  .map((a) => a.articles)
+                  .join("; ")})`}
+              . <span className="underline underline-offset-4">Ver a lista</span>
+            </span>
+          </summary>
+          <ul className="mt-2 list-disc pl-10">
+            {[...review.alteracoes]
+              .sort((a, b) => Number(Boolean(b.articles)) - Number(Boolean(a.articles)))
+              .map((a) => (
                 <li key={a.id}>
                   {docLabels[a.to_document_id] ?? "Norma"} foi {ACAO[a.kind as keyof typeof ACAO]}{" "}
                   por{" "}
@@ -96,9 +107,8 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
                   {a.articles ? ` (${a.articles})` : ""}
                 </li>
               ))}
-            </ul>
-          </div>
-        </div>
+          </ul>
+        </details>
       )}
       <RuleForm
         key={rule.updated_at}

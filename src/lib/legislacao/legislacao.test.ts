@@ -8,7 +8,7 @@ import {
   normalizarParametro,
   type SaidaExtracao,
 } from "./extracao"
-import { fragmentar, LIMITE_CARACTERES, textoParaEmbedding } from "./fragmentar"
+import { fragmentar, LIMITE_CARACTERES, quebrarTextoCorrido, textoParaEmbedding } from "./fragmentar"
 import { precisaDeOcr, separarPaginasOcr } from "./ocr"
 import { interpretarPaginas, resumirPaginas } from "./paginas"
 import { localizarTrecho, trechoEncontrado } from "./trechos"
@@ -113,6 +113,23 @@ Art. 82- Serão aplicados na ZOP 1 os instrumentos previstos nesta Lei, conforme
       },
     ])
     expect(f.at(-1)).toMatchObject({ artigo: "Anexo 5", paginaInicio: 9 })
+  })
+
+  it("quebra artigos e seções no meio do texto corrido do Diário Oficial", () => {
+    const corrido =
+      "V - solução para energia elétrica domiciliar. Art. 18. Não se caracterizam como loteamento as modificações, conforme o art. 5º desta Lei. § 1º - As áreas decorrentes. SEÇÃO II DO DESMEMBRAMENTO Art. 27. Desmembramento é a subdivisão. Seção IV Da Zona de Ocupação Consolidada (ZOC) Art. 87 - A Zona de Ocupação Consolidada caracteriza-se."
+    const linhas = quebrarTextoCorrido(corrido).split("\n")
+    expect(linhas.map((l) => l.slice(0, 18))).toEqual([
+      "V - solução para e",
+      "Art. 18. Não se ca",
+      "SEÇÃO II DO DESMEM",
+      "Art. 27. Desmembra",
+      "Seção IV Da Zona d",
+      "Art. 87 - A Zona d",
+    ])
+    const f = fragmentar([{ numero: 335, texto: corrido }])
+    expect(f.map((x) => x.artigo)).toEqual([null, "Art. 18", "Art. 27", "Art. 87"])
+    expect(f.find((x) => x.artigo === "Art. 87")?.secao).toBe("Seção IV Da Zona de Ocupação Consolidada (ZOC)")
   })
 
   it("monta o texto do embedding com seção e artigo", () => {

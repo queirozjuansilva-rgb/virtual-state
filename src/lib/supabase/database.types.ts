@@ -948,6 +948,7 @@ export type Database = {
           is_fictitious: boolean
           kind: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id: string
+          norm_pages: string | null
           notes: string | null
           number: string
           official_url: string | null
@@ -974,6 +975,7 @@ export type Database = {
           is_fictitious?: boolean
           kind: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id: string
+          norm_pages?: string | null
           notes?: string | null
           number: string
           official_url?: string | null
@@ -1000,6 +1002,7 @@ export type Database = {
           is_fictitious?: boolean
           kind?: Database["public"]["Enums"]["legal_document_kind"]
           municipality_id?: string
+          norm_pages?: string | null
           notes?: string | null
           number?: string
           official_url?: string | null
@@ -1684,6 +1687,10 @@ export type Database = {
           p_legal_document_id?: string
           p_municipality_id: string
         }
+        Returns: number
+      }
+      admin_recalcular_zona_dos_terrenos: {
+        Args: { p_municipality_id: string }
         Returns: number
       }
       admin_save_land: {

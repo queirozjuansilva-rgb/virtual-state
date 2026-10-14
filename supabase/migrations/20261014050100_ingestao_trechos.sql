@@ -67,3 +67,9 @@ revoke execute on function public.admin_substituir_trechos(uuid, jsonb) from pub
 revoke execute on function public.admin_gravar_embeddings(jsonb, text) from public, anon;
 grant execute on function public.admin_substituir_trechos(uuid, jsonb) to authenticated;
 grant execute on function public.admin_gravar_embeddings(jsonb, text) to authenticated;
+
+-- PDF oficial às vezes traz o processo legislativo inteiro (projeto, emendas,
+-- votações) além da lei publicada. Só as páginas da norma viram trechos de
+-- busca; o resto fica para consulta. Formato do admin: "2-30, 45".
+alter table public.legal_documents
+  add column norm_pages text check (norm_pages ~ '^[0-9]+(-[0-9]+)?(,\s*[0-9]+(-[0-9]+)?)*$');

@@ -6,7 +6,12 @@ import { requireAdmin } from "@/lib/auth/dal"
 import { acertoDaExtracao } from "@/lib/legislacao/extracao"
 import { createClient } from "@/lib/supabase/server"
 
-import { configIngestao, estimarCustoExtracao, estimarCustoOcr, temChaveVoyage } from "./config"
+import {
+  configIngestao,
+  estimarCustoOcr,
+  parametrosEstimativaExtracao,
+  temChaveVoyage,
+} from "./config"
 
 const BUCKET = "legal-documents"
 
@@ -84,7 +89,7 @@ export async function carregarLei(id: string) {
     voyage: temChaveVoyage(),
     estimativas: {
       ocrPendentes: estimarCustoOcr(pendente.count ?? 0),
-      extracaoPorPagina: estimarCustoExtracao(1),
+      extracao: parametrosEstimativaExtracao(),
     },
     relacoes: {
       alteradaPor: (alteradaPor.data ?? []).map((r) => ({

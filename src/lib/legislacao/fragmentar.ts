@@ -32,10 +32,26 @@ const PONTO_DE_CORTE = /^\s*(§|Par[áa]grafo|[IVXLCDM]+\s*[-–.]|[a-z]\))/
 type Linha = { pagina: number; texto: string }
 type Bloco = { artigo: string | null; secao: string | null; linhas: Linha[] }
 
+/**
+ * Texto corrido (Diário Oficial em colunas, OCR sem quebras): o artigo começa
+ * no meio da linha. Quebra antes de "Art. N" seguido de separador e caput em
+ * maiúscula, quando vem depois de fim de frase, parêntese ou título em
+ * maiúsculas; e antes de "SEÇÃO/Seção II" depois de fim de frase. Referência
+ * no meio da frase ("conforme o art. 5º desta Lei") não casa.
+ */
+const ARTIGO_NO_MEIO =
+  /(?<=[.;:)\]A-ZÀ-Ú])[ \t]+(?=Art(?:igo)?\.?\s*\d{1,4}(?:[-–][A-Z])?\s*[º°o]?\s*[.\-–—]\s*[A-ZÀ-Ú])/g
+const CABECALHO_NO_MEIO =
+  /(?<=[.;:])[ \t]+(?=(?:T[ÍI]TULO|CAP[ÍI]TULO|SE[ÇC][ÃA]O|SUBSE[ÇC][ÃA]O|T[íi]tulo|Cap[íi]tulo|Se[çc][ãa]o|Subse[çc][ãa]o)\s+[IVXLCDM]+\b)/g
+
+export function quebrarTextoCorrido(texto: string): string {
+  return texto.replace(CABECALHO_NO_MEIO, "\n").replace(ARTIGO_NO_MEIO, "\n")
+}
+
 function linhasDasPaginas(paginas: readonly PaginaTexto[]): Linha[] {
   const linhas: Linha[] = []
   for (const p of paginas) {
-    for (const bruta of p.texto.split("\n")) {
+    for (const bruta of quebrarTextoCorrido(p.texto).split("\n")) {
       const texto = bruta.replace(/\s+/g, " ").trim()
       if (texto) linhas.push({ pagina: p.numero, texto })
     }

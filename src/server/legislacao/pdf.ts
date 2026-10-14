@@ -79,11 +79,29 @@ export async function recortarPaginas(
   bytes: Uint8Array,
   paginas: readonly number[],
 ): Promise<Uint8Array> {
+  const [recorte] = await recortarLotes(bytes, [paginas])
+  return recorte
+}
+
+/** Vários recortes carregando o PDF uma vez só (o OCR manda lotes em paralelo). */
+export async function recortarLotes(
+  bytes: Uint8Array,
+  lotes: readonly (readonly number[])[],
+): Promise<Uint8Array[]> {
   const origem = await PDFDocument.load(bytes, { updateMetadata: false })
-  const indices = paginas.map((p) => p - 1).filter((i) => i >= 0 && i < origem.getPageCount())
-  for (const i of indices) podarRecursos(origem, origem.getPage(i))
-  const destino = await PDFDocument.create()
-  const copiadas = await destino.copyPages(origem, indices)
-  copiadas.forEach((p) => destino.addPage(p))
-  return destino.save()
+  const total = origem.getPageCount()
+  const podadas = new Set<number>()
+  const saida: Uint8Array[] = []
+  for (const paginas of lotes) {
+    const indices = paginas.map((p) => p - 1).filter((i) => i >= 0 && i < total)
+    for (const i of indices) {
+      if (!podadas.has(i)) podarRecursos(origem, origem.getPage(i))
+      podadas.add(i)
+    }
+    const destino = await PDFDocument.create()
+    const copiadas = await destino.copyPages(origem, indices)
+    copiadas.forEach((p) => destino.addPage(p))
+    saida.push(await destino.save())
+  }
+  return saida
 }

@@ -20,6 +20,15 @@ function somarUso(modelo: string, u: { input_tokens: number; output_tokens: numb
   }
 }
 
+export type ResultadoOcr = {
+  paginas: Map<number, string>
+  faltando: number[]
+  /** A resposta parou no limite de tokens: páginas faltantes devem ser tentadas de novo. */
+  truncada: boolean
+  uso: Uso
+  modelo: string
+}
+
 /** Páginas por chamada de OCR: ~4 páginas cabem com folga em 16k tokens de saída. */
 export const PAGINAS_POR_CHAMADA_OCR = 4
 
@@ -30,9 +39,16 @@ export const PAGINAS_POR_CHAMADA_OCR = 4
 export async function transcreverPaginas(
   pdf: Uint8Array,
   paginas: readonly number[],
-): Promise<{ paginas: Map<number, string>; faltando: number[]; uso: Uso; modelo: string }> {
+): Promise<ResultadoOcr> {
+  return transcreverRecorte(await recortarPaginas(pdf, paginas), paginas)
+}
+
+/** OCR de um recorte já pronto (as páginas do recorte, na ordem, são `paginas`). */
+export async function transcreverRecorte(
+  recorte: Uint8Array,
+  paginas: readonly number[],
+): Promise<ResultadoOcr> {
   const modelo = configIngestao.INGESTAO_OCR_MODEL
-  const recorte = await recortarPaginas(pdf, paginas)
   const resposta = await clienteAnthropic().messages.create({
     model: modelo,
     max_tokens: 16_000,
@@ -61,7 +77,14 @@ export async function transcreverPaginas(
   const texto = resposta.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n")
   const { paginas: transcritas, faltando } = separarPaginasOcr(texto, paginas)
   // Resposta cortada no limite: as páginas finais ficam para a próxima rodada.
-  return { paginas: transcritas, faltando, uso: somarUso(modelo, resposta.usage), modelo }
+  // Sem corte, página que não voltou é página sem texto (em branco).
+  return {
+    paginas: transcritas,
+    faltando,
+    truncada: resposta.stop_reason === "max_tokens",
+    uso: somarUso(modelo, resposta.usage),
+    modelo,
+  }
 }
 
 /**
