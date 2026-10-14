@@ -80,6 +80,23 @@ export type TrechoLegal = {
 
 export type AmostraPreco = { price_m2: number; is_fictitious: boolean }
 
+/**
+ * Indicador agregado de mercado (ex.: CPES do Sinduscon-CE): preço médio de
+ * tabela, oferta e IVV por bairro ou do município (`neighborhood` nulo).
+ * Contexto para o usuário, nunca preço do estudo.
+ */
+export type IndicadorMercado = {
+  neighborhood: string | null
+  typology: Enums<"comparable_typology"> | null
+  period: string
+  avg_price_m2: number | null
+  vso_pct: number | null
+  stock_units: number | null
+  source: string
+  source_page: number | null
+  internal_only: boolean
+}
+
 export type MunicipioBruto = { id: string; name: string; uf: string; coverage_status: string }
 
 /** Resultado da geocodificação de um endereço digitado. */
@@ -129,6 +146,8 @@ export interface DadosCopiloto {
     uf: string,
     padrao: string,
   ): Promise<{ value_m2: number; reference_month: string; source: string } | null>
+  /** Indicadores agregados do período mais recente do município (todos os bairros). */
+  indicadoresMercado(municipioId: string): Promise<IndicadorMercado[]>
   configMotor(): Promise<ConfigMotor>
   contextoTerreno(landId: string, usos?: Uso[]): Promise<ContextoTerreno | null>
   contextoPonto(params: {

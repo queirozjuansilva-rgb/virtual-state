@@ -303,6 +303,73 @@ describe("mercado", () => {
     expect(resultado.cub?.padrao).toBe("R8-N")
     expect(resultado.avisos.join(" ")).toMatch(/CSL8-N não cadastrado/)
   })
+
+  it("indicadores agregados do bairro e do município, só como contexto", async () => {
+    const linha = {
+      typology: "apartamento" as const,
+      period: "2026-06-01",
+      source: "CPES Sinduscon-CE, 2º trimestre de 2026",
+      internal_only: true,
+    }
+    dados.indicadoresMercado = async () => [
+      {
+        ...linha,
+        neighborhood: "Meireles",
+        avg_price_m2: 20172,
+        vso_pct: 0.098,
+        stock_units: 508,
+        source_page: 44,
+      },
+      {
+        ...linha,
+        neighborhood: null,
+        avg_price_m2: 11977,
+        vso_pct: 0.076,
+        stock_units: 10753,
+        source_page: 32,
+      },
+    ]
+    const { resultado } = await rodar<ResultadoMercado>("consultar_mercado", { terreno: "VE-0001" })
+    expect(resultado.indicadores).toMatchObject({
+      periodo_fmt: "jun. de 2026",
+      uso_interno: true,
+      bairro: {
+        nome: "Meireles",
+        preco_m2_fmt: "R$ 20.172,00/m²",
+        ivv_fmt: "9,8%",
+        oferta: 508,
+        pagina: 44,
+      },
+      municipio: { nome: "Fortaleza", oferta: 10753, pagina: 32 },
+    })
+    expect(resultado.comparaveis?.mediana_m2_fmt).toBe("R$ 12.961,24/m²")
+    expect(resultado.avisos.join(" ")).toMatch(/preço médio de tabela \(não de venda\)/)
+
+    // Ponto: o bairro vem da entrada, sem acento nem caixa.
+    const ponto = await rodar<ResultadoMercado>("consultar_mercado", {
+      longitude: -38.498,
+      latitude: -3.74,
+      bairro: "MEIRELES ",
+    })
+    expect(ponto.resultado.indicadores?.bairro?.nome).toBe("Meireles")
+
+    const semBairro = await rodar<ResultadoMercado>("consultar_mercado", {
+      longitude: -38.498,
+      latitude: -3.74,
+      bairro: "Bairro Inexistente",
+    })
+    expect(semBairro.resultado.indicadores?.bairro).toBeNull()
+    expect(semBairro.resultado.avisos.join(" ")).toMatch(
+      /Sem indicador para o bairro Bairro Inexistente/,
+    )
+
+    // Indicador de apartamento não vale para uso comercial.
+    const comercial = await rodar<ResultadoMercado>("consultar_mercado", {
+      terreno: "VE-0001",
+      uso: "comercial",
+    })
+    expect(comercial.resultado.indicadores).toBeNull()
+  })
 })
 
 describe("viabilidade", () => {

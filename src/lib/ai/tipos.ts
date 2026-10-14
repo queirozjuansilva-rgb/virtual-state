@@ -105,7 +105,23 @@ export type ResultadoMercado = {
     ficticios: boolean
   } | null
   cub: { padrao: string; uf: string; valor_fmt: string; mes_fmt: string; origem: string } | null
+  /** Indicadores agregados (CPES): contexto, nunca preço do estudo; fora do PDF. */
+  indicadores: {
+    fonte: string
+    periodo_fmt: string
+    uso_interno: boolean
+    bairro: IndicadorResumo | null
+    municipio: IndicadorResumo | null
+  } | null
   avisos: string[]
+}
+
+export type IndicadorResumo = {
+  nome: string
+  preco_m2_fmt: string | null
+  ivv_fmt: string | null
+  oferta: number | null
+  pagina: number | null
 }
 
 export type MetricasResumo = {

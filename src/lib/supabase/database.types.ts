@@ -1109,33 +1109,48 @@ export type Database = {
           avg_price_m2: number | null
           created_at: string
           id: string
+          internal_only: boolean
           municipality_id: string
           neighborhood: string | null
+          notes: string | null
           period: string
           source: string
+          source_page: number | null
+          source_url: string | null
           stock_units: number | null
+          typology: Database["public"]["Enums"]["comparable_typology"] | null
           vso_pct: number | null
         }
         Insert: {
           avg_price_m2?: number | null
           created_at?: string
           id?: string
+          internal_only?: boolean
           municipality_id: string
           neighborhood?: string | null
+          notes?: string | null
           period: string
           source: string
+          source_page?: number | null
+          source_url?: string | null
           stock_units?: number | null
+          typology?: Database["public"]["Enums"]["comparable_typology"] | null
           vso_pct?: number | null
         }
         Update: {
           avg_price_m2?: number | null
           created_at?: string
           id?: string
+          internal_only?: boolean
           municipality_id?: string
           neighborhood?: string | null
+          notes?: string | null
           period?: string
           source?: string
+          source_page?: number | null
+          source_url?: string | null
           stock_units?: number | null
+          typology?: Database["public"]["Enums"]["comparable_typology"] | null
           vso_pct?: number | null
         }
         Relationships: [

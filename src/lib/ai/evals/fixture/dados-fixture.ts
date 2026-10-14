@@ -284,6 +284,9 @@ export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixtu
         ? { value_m2: c.value_m2, reference_month: c.reference_month, source: c.source }
         : null
     },
+    async indicadoresMercado() {
+      return []
+    },
     async configMotor() {
       return config
     },

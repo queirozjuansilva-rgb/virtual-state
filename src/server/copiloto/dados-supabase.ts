@@ -254,6 +254,26 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
         : null
     },
 
+    async indicadoresMercado(municipioId) {
+      const { data, error } = await supabase
+        .from("market_indicators")
+        .select(
+          "neighborhood, typology, period, avg_price_m2, vso_pct, stock_units, source, source_page, internal_only",
+        )
+        .eq("municipality_id", municipioId)
+        .order("period", { ascending: false })
+        .limit(500)
+      falhou("os indicadores de mercado", error)
+      const periodo = data?.[0]?.period
+      return (data ?? [])
+        .filter((i) => i.period === periodo)
+        .map((i) => ({
+          ...i,
+          avg_price_m2: i.avg_price_m2 === null ? null : Number(i.avg_price_m2),
+          vso_pct: i.vso_pct === null ? null : Number(i.vso_pct),
+        }))
+    },
+
     configMotor: () => carregarConfig(supabase),
 
     contextoTerreno: (landId, usos) => carregarContexto(supabase, landId, usos),
