@@ -213,7 +213,7 @@ export type RegistrosFixture = {
 
 export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixture } {
   const registros: RegistrosFixture = { analises: [], coberturas: [] }
-  const desde = inicioJanela(config, new Date(`${seed.hoje}T12:00:00Z`))
+  const desde = inicioJanela(config, seed.hoje)
 
   function analisarPonto(longitude: number, latitude: number): PontoBruto {
     const p = pontoDoSeed(longitude, latitude)

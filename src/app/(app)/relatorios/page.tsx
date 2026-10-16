@@ -7,12 +7,11 @@ import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requireUser } from "@/lib/auth/dal"
+import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 import { listarRelatorios } from "@/server/relatorios/queries"
 
 export const metadata: Metadata = { title: "Relatórios" }
-
-const dataHora = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" })
 
 export default function RelatoriosPage() {
   return (
@@ -56,7 +55,7 @@ async function Lista() {
               </Badge>
             )}
             <span className="text-xs text-muted-foreground tabular-nums">
-              Versão {r.versaoAtual} · atualizado em {dataHora.format(new Date(r.atualizadoEm))}
+              Versão {r.versaoAtual} · atualizado em {formatDateTime(r.atualizadoEm)}
             </span>
           </Link>
         </li>

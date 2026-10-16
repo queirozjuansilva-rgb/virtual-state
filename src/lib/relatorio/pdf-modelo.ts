@@ -1,6 +1,13 @@
 import { LAND_USE } from "@/lib/domain/labels"
 import type { MesFluxo } from "@/lib/feasibility"
-import { formatArea, formatBRL, formatMeters, formatNumber, formatPercent } from "@/lib/format"
+import {
+  formatArea,
+  formatBRL,
+  formatDateTime,
+  formatMeters,
+  formatNumber,
+  formatPercent,
+} from "@/lib/format"
 import { formatarFonte, formatarValorPremissa } from "@/lib/format/fonte"
 
 import {
@@ -50,12 +57,6 @@ export type ModeloPdf = {
 
 const NIVEL = { baixo: "Baixo", medio: "Médio", alto: "Alto" } as const
 
-const dataHora = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
-  timeZone: "America/Fortaleza",
-})
-
 export function montarModeloPdf(dados: {
   titulo: string
   organizacao: string
@@ -81,8 +82,8 @@ export function montarModeloPdf(dados: {
     organizacao: dados.organizacao,
     versao: dados.versao.versao,
     versaoMotor: dados.versao.versaoMotor,
-    salvaEm: dataHora.format(new Date(dados.versao.salvaEm)),
-    geradoEm: dataHora.format(dados.geradoEm),
+    salvaEm: formatDateTime(dados.versao.salvaEm),
+    geradoEm: formatDateTime(dados.geradoEm),
     local: t
       ? `${t.codigo} · ${t.endereco}${t.bairro ? `, ${t.bairro}` : ""} · ${t.municipio}/${t.uf}`
       : (dados.contexto.referencia ?? "Local não informado"),
