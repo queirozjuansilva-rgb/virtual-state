@@ -57,12 +57,45 @@ describe("parseRuleForm", () => {
         [`src_${k}_article`, `Art. ${k}`],
       ]),
     )
-    const result = parseRuleForm({ ...base, ...sources, intent: "validar" })
+    const result = parseRuleForm({
+      ...base,
+      ...sources,
+      intent: "validar",
+      validation_note: "Conferido por Fulano com a LC 62/2009.",
+    })
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.data.validate).toBe(true)
     expect(result.data.sources).toHaveLength(5)
     expect(result.data.sources[0]).toMatchObject({ legal_document_id: DOC, excerpt: null })
+  })
+
+  it("exige nota de homologação ao validar e lê página, condição e resolução", () => {
+    const fontes = Object.fromEntries(
+      ["permitted", "ca_basico", "ca_max", "to_max", "recuo_lateral"].flatMap((k) => [
+        [`src_${k}_doc`, DOC],
+        [`src_${k}_article`, `Art. ${k}`],
+      ]),
+    )
+    const sem = parseRuleForm({ ...base, ...fontes, intent: "validar" })
+    expect(sem.ok).toBe(false)
+    if (sem.ok) return
+    expect(sem.fieldErrors.validation_note).toEqual(["Registre quem conferiu e com base em quê."])
+
+    const com = parseRuleForm({
+      ...base,
+      ...fontes,
+      src_ca_basico_page: "77",
+      src_ca_basico_condition: "Lotes acima de 1.000 m²",
+      src_ca_basico_resolution: "LC 236/2017 prevalece (posterior).",
+    })
+    expect(com.ok).toBe(true)
+    if (!com.ok) return
+    expect(com.data.sources.find((x) => x.field === "ca_basico")).toMatchObject({
+      page: 77,
+      condition: "Lotes acima de 1.000 m²",
+      resolution_note: "LC 236/2017 prevalece (posterior).",
+    })
   })
 
   it("aponta fonte incompleta mesmo em rascunho", () => {

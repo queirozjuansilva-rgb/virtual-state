@@ -142,6 +142,11 @@ select 'CE', v.month, 'R8-N', v.value, 'Sinduscon-CE',
   ) as v (month, value)
 on conflict (uf, reference_month, standard) do nothing;
 
+insert into public.cub_values (uf, reference_month, standard, value_m2, source, source_url, notes)
+values ('CE', date '2026-09-01', 'R8-N', 2510.74, 'Sinduscon-CE', 'https://sindusconce.com.br/',
+        'CUB-CE (onerado) de set/2026, variação de 2,14%, conforme a página inicial do Sinduscon-CE em 2026-10-14. O valor de ago/2026 (R$ 2.458,13) confere com a mesma fonte.')
+on conflict (uf, reference_month, standard) do nothing;
+
 -- Terrenos fictícios ------------------------------------------------------------
 -- Retângulos em metros convertidos para graus a partir do canto sudoeste.
 

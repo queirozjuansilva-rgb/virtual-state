@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { estatisticaComparaveis } from "@/lib/feasibility"
 import { formatBRL, formatDate, formatMonthYear, formatNumber, formatPercent } from "@/lib/format"
+import { normalizarParaComparar } from "@/lib/legislacao/trechos"
 import {
   inicioJanela,
   PADRAO_CUB_FALLBACK,
@@ -9,8 +10,8 @@ import {
   TIPOLOGIA_POR_USO,
 } from "@/server/feasibility/config"
 
-import type { AmostraPreco } from "../dados"
-import type { ResultadoMercado } from "../tipos"
+import type { AmostraPreco, IndicadorMercado } from "../dados"
+import type { IndicadorResumo, ResultadoMercado } from "../tipos"
 import {
   alvoTerrenoOuPonto,
   ErroFerramenta,
@@ -27,7 +28,7 @@ export const consultarMercado = ferramenta({
   nome: "consultar_mercado",
   rotulo: "Consultando comparáveis e CUB",
   descricao:
-    "Retorna o mercado no entorno de um terreno ou ponto: estatística dos comparáveis de venda da tipologia do uso (n, mediana e média de R$/m², dispersão, faixa) dentro do raio e da janela configurados, e o CUB mais recente da UF para o padrão construtivo do uso. Use para perguntas de preço de venda e custo de construção. Informe `terreno` OU `longitude` + `latitude`.",
+    "Retorna o mercado no entorno de um terreno ou ponto: estatística dos comparáveis de venda da tipologia do uso (n, mediana e média de R$/m², dispersão, faixa) dentro do raio e da janela configurados, o CUB mais recente da UF para o padrão construtivo do uso e, quando houver, indicadores agregados do bairro e do município (preço médio de tabela, IVV e oferta, ex.: CPES do Sinduscon-CE). Os indicadores são só contexto: cite a fonte e nunca os use como preço de venda do estudo. Use para perguntas de preço de venda e custo de construção. Informe `terreno` OU `longitude` + `latitude`.",
   entrada: z.object({
     terreno: zRefTerreno.optional(),
     longitude: zLongitude.optional(),
@@ -35,6 +36,13 @@ export const consultarMercado = ferramenta({
     uso: zUso
       .optional()
       .describe("Uso que define a tipologia e o padrão do CUB (padrão: residencial_vertical)."),
+    bairro: z
+      .string()
+      .max(120)
+      .optional()
+      .describe(
+        "Bairro do ponto, quando conhecido (ex.: do endereço localizado). Para terreno, vem do cadastro.",
+      ),
   }),
   async executar(e, { dados }) {
     const a = alvoTerrenoOuPonto(e)
@@ -48,10 +56,14 @@ export const consultarMercado = ferramenta({
     let uf: string
     let amostras: AmostraPreco[]
     let terrenoId: string | undefined
+    let municipio: { id: string; name: string }
+    let bairro = e.bairro?.trim() || null
     if (a.tipo === "terreno") {
       const t = await resolverTerreno(dados, a.ref)
       referencia = t.code
       uf = t.municipality.uf
+      municipio = t.municipality
+      bairro = t.neighborhood ?? bairro
       terrenoId = t.id
       amostras = await dados.comparaveisTerreno(t.id, tipologia, raio, desde)
     } else {
@@ -63,6 +75,7 @@ export const consultarMercado = ferramenta({
         )
       }
       uf = ponto.municipio.uf
+      municipio = ponto.municipio
       amostras = await dados.comparaveisPonto(a.longitude, a.latitude, tipologia, raio, desde)
     }
 
@@ -103,6 +116,26 @@ export const consultarMercado = ferramenta({
       )
     }
 
+    // CPES: direitos de redistribuição ainda não confirmados; só administradores veem.
+    const indicadores = (await dados.usuarioEhAdmin())
+      ? resumirIndicadores(
+          await dados.indicadoresMercado(municipio.id),
+          tipologia,
+          bairro,
+          municipio.name,
+        )
+      : null
+    if (indicadores) {
+      avisos.push(
+        "Indicadores agregados são preço médio de tabela (não de venda) e servem só de contexto: o preço do estudo vem dos comparáveis ou do usuário.",
+      )
+      if (bairro && !indicadores.bairro) {
+        avisos.push(
+          `Sem indicador para o bairro ${bairro} na fonte; exibido só o agregado do município.`,
+        )
+      }
+    }
+
     const resultado: ResultadoMercado = {
       referencia,
       tipologia: `${tipologiaTexto} (${rotuloUso(uso).toLowerCase()})`,
@@ -128,8 +161,43 @@ export const consultarMercado = ferramenta({
             origem: cub.source,
           }
         : null,
+      indicadores,
       avisos,
     }
     return { resultado, cartao: { tipo: "mercado", dados: resultado }, terrenoId }
   },
 })
+
+function resumo(nome: string, i: IndicadorMercado): IndicadorResumo {
+  return {
+    nome,
+    preco_m2_fmt: i.avg_price_m2 === null ? null : `${formatBRL(i.avg_price_m2)}/m²`,
+    ivv_fmt: i.vso_pct === null ? null : formatPercent(i.vso_pct),
+    oferta: i.stock_units,
+    pagina: i.source_page,
+  }
+}
+
+/** Indicador do bairro (comparação sem acento e pontuação) e o agregado do município. */
+export function resumirIndicadores(
+  linhas: IndicadorMercado[],
+  tipologia: IndicadorMercado["typology"],
+  bairro: string | null,
+  nomeMunicipio: string,
+): ResultadoMercado["indicadores"] {
+  const daTipologia = linhas.filter((i) => i.typology === null || i.typology === tipologia)
+  const municipio = daTipologia.find((i) => i.neighborhood === null)
+  const alvo = bairro ? normalizarParaComparar(bairro) : null
+  const doBairro = alvo
+    ? daTipologia.find((i) => i.neighborhood && normalizarParaComparar(i.neighborhood) === alvo)
+    : undefined
+  const base = doBairro ?? municipio
+  if (!base) return null
+  return {
+    fonte: base.source,
+    periodo_fmt: formatMonthYear(base.period),
+    uso_interno: daTipologia.some((i) => i.internal_only),
+    bairro: doBairro ? resumo(doBairro.neighborhood!, doBairro) : null,
+    municipio: municipio ? resumo(nomeMunicipio, municipio) : null,
+  }
+}

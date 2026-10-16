@@ -61,6 +61,25 @@ export async function estudarTerreno(pedido: PedidoEstudo): Promise<RespostaEstu
   const { landId, uso, precoVendaM2, usarCaMaximo } = parsed.data
 
   const supabase = await createClient()
+
+  // Terreno arquivado (dados de teste ou retirado do Land Bank) não é estudado,
+  // nem quando o UUID é informado direto: a busca e o copiloto já o escondem.
+  const { data: situacao, error: erroSituacao } = await supabase
+    .from("lands")
+    .select("archived_at")
+    .eq("id", landId)
+    .maybeSingle()
+  if (erroSituacao) {
+    console.error("estudo do terreno", { code: erroSituacao.code, message: erroSituacao.message })
+    return { ok: false, erro: "Não foi possível carregar os dados do terreno." }
+  }
+  if (situacao?.archived_at) {
+    return {
+      ok: false,
+      erro: "Este terreno está arquivado (dados de teste ou retirado do Land Bank) e não pode ser estudado.",
+    }
+  }
+
   let ctx
   try {
     ctx = await carregarContexto(supabase, landId, uso ? [uso] : undefined)

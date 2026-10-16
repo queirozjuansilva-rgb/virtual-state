@@ -77,6 +77,8 @@ export type ContextoTerreno = {
   }
   /** Regras validadas da zona do lote (todas os usos). */
   regras: RegraDb[]
+  /** Tipos de camada que o município tem; sem o campo, o estudo não avalia a cobertura. */
+  camadasDoMunicipio?: Enums<"environmental_layer_kind">[]
   hitsAmbientais: {
     kind: Enums<"environmental_layer_kind">
     name: string
@@ -113,6 +115,15 @@ const TIPO_RESTRICAO: Record<Enums<"environmental_layer_kind">, TipoRestricao> =
   tombamento: "tombamento",
   outro: "outro",
 }
+
+/** Tipos de camada cuja ausência no município vira aviso de dados insuficientes. */
+const CAMADAS_AVALIADAS: Enums<"environmental_layer_kind">[] = [
+  "app",
+  "area_alagavel",
+  "zona_protecao_ambiental",
+  "faixa_dominio",
+  "tombamento",
+]
 
 export function montarRegra(ctx: ContextoTerreno, uso: Uso): RegraUrbanistica {
   const linha = ctx.terreno.zone ? ctx.regras.find((r) => r.use_type === uso) : undefined
@@ -195,6 +206,12 @@ export function montarEntrada(ctx: ContextoTerreno, opcoes: OpcoesEstudo): Entra
     sobreposicaoM2: h.overlap_m2 === null ? null : Number(h.overlap_m2),
     origem: `${h.name}${h.is_fictitious ? " (camada fictícia)" : ""}`,
   }))
+  // Sem camada oficial de um tipo, "nenhuma interseção" não prova nada.
+  const camadasSemCobertura = ctx.camadasDoMunicipio
+    ? CAMADAS_AVALIADAS.filter((k) => !ctx.camadasDoMunicipio!.includes(k)).map(
+        (k) => TIPO_RESTRICAO[k],
+      )
+    : undefined
   const checklist: [boolean, TipoRestricao][] = [
     [t.tem_app, "app"],
     [t.tem_area_alagavel, "area_alagavel"],
@@ -300,6 +317,7 @@ export function montarEntrada(ctx: ContextoTerreno, opcoes: OpcoesEstudo): Entra
         matriculaInformada: Boolean(t.matricula_numero?.trim()),
         onusRegistrado: Boolean(t.onus?.trim()),
         restricoes,
+        ...(camadasSemCobertura ? { camadasSemCobertura } : {}),
         zona: {
           codigo: t.zone?.code ?? null,
           atribuicao: t.zone === null ? "nenhuma" : t.zone_assignment,

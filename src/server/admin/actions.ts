@@ -19,15 +19,20 @@ import {
   zodErrorState,
   type FormState,
 } from "@/lib/forms"
+import { RULE_FIELDS } from "@/lib/domain/zoning-rule-fields"
 import { multiPolygonFromString, toMultiPolygon } from "@/lib/geo/geojson"
+import { conflitosDeFonte } from "@/lib/legislacao/conflitos"
+import { localizarTrecho } from "@/lib/legislacao/trechos"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 import { landFormSchema, toLandRpcArgs } from "./land-input"
-import { parseRuleForm } from "./rule-input"
+import { parseRuleForm, type RuleSource } from "./rule-input"
 
 /** As funções RPC aceitam p_id nulo para "criar"; o tipo gerado não reflete isso. */
 const NEW = null as unknown as string
+/** UUID que não existe: "nenhuma regra a excluir" no filtro de regra validada atual. */
+const NEW_ID_PLACEHOLDER = "00000000-0000-0000-0000-000000000000"
 
 async function adminClient() {
   await requireAdmin()
@@ -176,11 +181,52 @@ export async function saveZoningRule(
   const { values, sources, validate } = parsed.data
 
   const supabase = await adminClient()
+
+  // Fonte que diverge da regra validada atual, vinda de outra norma, exige
+  // resolução documentada antes de homologar (Blueprint v2.2, p. 8 e 17).
+  if (validate) {
+    const { data: atual } = await supabase
+      .from("zoning_rules")
+      .select(
+        `id, ${RULE_FIELDS.map((f) => f.key).join(", ")}, rule_sources(field, legal_document_id)`,
+      )
+      .eq("zone_id", zoneId)
+      .eq("use_type", values.use_type)
+      .eq("status", "validado")
+      .neq("id", ruleId ?? NEW_ID_PLACEHOLDER)
+      .maybeSingle()
+    if (atual) {
+      const fontesAtuais = Object.fromEntries(
+        (
+          atual as unknown as { rule_sources: { field: string; legal_document_id: string }[] }
+        ).rule_sources.map((f) => [f.field, f]),
+      )
+      const conflitos = conflitosDeFonte(
+        { valores: values, fontes: Object.fromEntries(sources.map((f) => [f.field, f])) },
+        { valores: atual as unknown as Record<string, unknown>, fontes: fontesAtuais },
+      ).filter((c) => !sources.find((f) => f.field === c.campo)?.resolution_note)
+      if (conflitos.length > 0) {
+        return {
+          error:
+            "Há conflito de fontes com a regra validada atual. Registre a resolução nos campos destacados.",
+          fieldErrors: Object.fromEntries(
+            conflitos.map((c) => [
+              `src_${c.campo}`,
+              [
+                "A regra validada usa outra norma com valor diferente. Explique qual prevalece e por quê.",
+              ],
+            ]),
+          ),
+        }
+      }
+    }
+  }
+
   const { data: id, error } = await supabase.rpc("admin_save_zoning_rule", {
     p_id: ruleId ?? NEW,
     p_zone_id: zoneId,
     p_data: values as Json,
-    p_sources: sources as Json,
+    p_sources: (await conferirTrechos(supabase, sources)) as Json,
     p_validate: validate,
   })
   if (error) return dbErrorState(error)
@@ -191,6 +237,36 @@ export async function saveZoningRule(
   if (ruleId === null) redirect(`/admin/regras/${id}?salvo=${validate ? "validada" : "rascunho"}`)
   refresh()
   return { ok: true, message }
+}
+
+/**
+ * Confere, no texto da página citada (e vizinhas), se o trecho de cada fonte
+ * existe. Sem página ou sem texto daquela norma, fica "não conferido" (null).
+ */
+async function conferirTrechos(
+  supabase: Awaited<ReturnType<typeof adminClient>>,
+  sources: RuleSource[],
+): Promise<(RuleSource & { excerpt_verified: boolean | null })[]> {
+  const comPagina = sources.filter((f) => f.page && f.excerpt)
+  const docs = [...new Set(comPagina.map((f) => f.legal_document_id))]
+  const paginas = [...new Set(comPagina.flatMap((f) => [f.page! - 1, f.page!, f.page! + 1]))]
+  const textos = new Map<string, Map<number, string>>()
+  if (docs.length > 0) {
+    const { data } = await supabase
+      .from("legal_document_pages")
+      .select("legal_document_id, page_number, content")
+      .in("legal_document_id", docs)
+      .in("page_number", paginas)
+    for (const p of data ?? []) {
+      if (!textos.has(p.legal_document_id)) textos.set(p.legal_document_id, new Map())
+      textos.get(p.legal_document_id)!.set(p.page_number, p.content)
+    }
+  }
+  return sources.map((f) => {
+    const doc = textos.get(f.legal_document_id)
+    if (!f.page || !f.excerpt || !doc) return { ...f, excerpt_verified: null }
+    return { ...f, excerpt_verified: localizarTrecho(f.excerpt, f.page, doc).encontrado }
+  })
 }
 
 export async function archiveZoningRule(ruleId: string): Promise<FormState> {

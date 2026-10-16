@@ -20,6 +20,7 @@ export type TerrenoDoRelatorio = {
   situacao: Enums<"land_status">
   geojson: Json | null
   ficticio: boolean
+  arquivado: boolean
 }
 
 export type RevisaoRelatorio = {
@@ -37,6 +38,10 @@ export type RelatorioCompleto = {
   versaoAtual: number
   tokenCompartilhamento: string | null
   organizacao: string
+  /** Regra urbanística mudou depois do estudo (ADR 0011). */
+  desatualizado: { desde: string; motivo: string | null } | null
+  /** Terreno fictício ou arquivado: só administradores enxergam (RLS de reports). */
+  dadosDeTeste: boolean
   contexto: Partial<ContextoEstudo>
   terreno: TerrenoDoRelatorio | null
   /** Versão exibida (a atual, ou a pedida em ?versao=). */
@@ -54,7 +59,7 @@ export async function carregarRelatorio(
   const { data: r, error } = await supabase
     .from("reports")
     .select(
-      "id, title, current_version, share_token, contexto, land_id, organization:organizations(name), land:lands(id, code, address, neighborhood, status, geojson, is_fictitious, municipality:municipalities(name, uf))",
+      "id, title, current_version, share_token, contexto, land_id, stale_since, stale_reason, organization:organizations(name), land:lands(id, code, address, neighborhood, status, geojson, is_fictitious, archived_at, municipality:municipalities(name, uf))",
     )
     .eq("id", id)
     .maybeSingle()
@@ -84,6 +89,8 @@ export async function carregarRelatorio(
     versaoAtual: r.current_version,
     tokenCompartilhamento: r.share_token,
     organizacao: r.organization?.name ?? "",
+    desatualizado: r.stale_since ? { desde: r.stale_since, motivo: r.stale_reason } : null,
+    dadosDeTeste: Boolean(land && (land.is_fictitious || land.archived_at)),
     contexto: (r.contexto ?? {}) as Partial<ContextoEstudo>,
     terreno: land
       ? {
@@ -96,6 +103,7 @@ export async function carregarRelatorio(
           situacao: land.status,
           geojson: land.geojson,
           ficticio: land.is_fictitious,
+          arquivado: Boolean(land.archived_at),
         }
       : null,
     versao: {
@@ -135,12 +143,17 @@ export type ItemRelatorio = {
   versaoAtual: number
   atualizadoEm: string
   compartilhado: boolean
+  desatualizado: boolean
+  /** Terreno fictício ou arquivado: a lista só os traz para administradores (RLS). */
+  dadosDeTeste: boolean
 }
 
 export async function listarRelatorios(supabase: Supabase): Promise<ItemRelatorio[]> {
   const { data, error } = await supabase
     .from("reports")
-    .select("id, title, current_version, updated_at, share_token")
+    .select(
+      "id, title, current_version, updated_at, share_token, stale_since, land:lands(is_fictitious, archived_at)",
+    )
     .order("updated_at", { ascending: false })
     .limit(100)
   falhou("os relatórios", error)
@@ -150,5 +163,7 @@ export async function listarRelatorios(supabase: Supabase): Promise<ItemRelatori
     versaoAtual: r.current_version,
     atualizadoEm: r.updated_at,
     compartilhado: Boolean(r.share_token),
+    desatualizado: Boolean(r.stale_since),
+    dadosDeTeste: Boolean(r.land && (r.land.is_fictitious || r.land.archived_at)),
   }))
 }
