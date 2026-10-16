@@ -170,7 +170,8 @@ export async function alternarCompartilhamento(
     .select("id")
     .maybeSingle()
   if (error || !data) {
-    console.error(error)
+    // Só código e mensagem: `details` de violação de restrição traz a linha, com o token.
+    console.error("compartilhamento do relatório", { code: error?.code, message: error?.message })
     return { ok: false, erro: "Não foi possível alterar o compartilhamento." }
   }
   refresh()

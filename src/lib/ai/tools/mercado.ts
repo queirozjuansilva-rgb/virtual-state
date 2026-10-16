@@ -41,7 +41,7 @@ export const consultarMercado = ferramenta({
     const uso = e.uso ?? "residencial_vertical"
     const tipologia = TIPOLOGIA_POR_USO[uso]
     const config = await dados.configMotor()
-    const desde = inicioJanela(config, new Date(`${dados.hoje()}T12:00:00Z`))
+    const desde = inicioJanela(config, dados.hoje())
     const raio = config.mercado.raioM
 
     let referencia: string

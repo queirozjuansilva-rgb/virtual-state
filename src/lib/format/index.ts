@@ -1,5 +1,7 @@
 /** Formatação e leitura de números no padrão brasileiro (R$, m², %). */
 
+export * from "./datas"
+
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
 const brlCompact = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -37,23 +39,6 @@ export function formatPercent(value: number | null | undefined, fractionDigits =
     minimumFractionDigits: 0,
     maximumFractionDigits: fractionDigits,
   }).format(value)
-}
-
-const monthYear = new Intl.DateTimeFormat("pt-BR", {
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-})
-
-/** "2026-08-01" → "ago. de 2026" (datas de referência mensais, em UTC). */
-export function formatMonthYear(isoDate: string) {
-  return monthYear.format(new Date(`${isoDate.slice(0, 10)}T00:00:00Z`))
-}
-
-const dateFmt = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" })
-
-export function formatDate(isoDate: string | null | undefined) {
-  return isoDate ? dateFmt.format(new Date(`${isoDate.slice(0, 10)}T00:00:00Z`)) : "—"
 }
 
 /**

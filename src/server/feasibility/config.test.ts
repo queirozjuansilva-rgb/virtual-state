@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { CENARIOS_PADRAO, PREMISSAS_PADRAO, RISCO_PADRAO } from "@/lib/feasibility"
 
@@ -9,6 +9,7 @@ import {
   CHAVES_CENARIOS,
   CHAVES_DEFAULTS,
   formaAquisicaoDoTerreno,
+  inicioJanela,
   montarConfig,
   type LinhaDefault,
 } from "./config"
@@ -113,5 +114,24 @@ describe("formaAquisicaoDoTerreno", () => {
     expect(formaAquisicaoDoTerreno("permuta_fisica")).toBe("permuta_fisica")
     expect(formaAquisicaoDoTerreno("misto")).toBe("misto")
     expect(formaAquisicaoDoTerreno(null)).toBeNull()
+  })
+})
+
+describe("inicioJanela", () => {
+  const config = { mercado: { raioM: 1500, janelaMeses: 24 } }
+
+  it("conta os meses a partir da data informada", () => {
+    expect(inicioJanela(config, "2026-10-14")).toBe("2024-10-14")
+  })
+
+  it("sem data, parte de hoje em Fortaleza (não do dia UTC)", () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    try {
+      // 23:30 de 13/10 em Fortaleza já é 14/10 em UTC.
+      vi.setSystemTime(new Date("2026-10-14T02:30:00Z"))
+      expect(inicioJanela(config)).toBe("2024-10-13")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

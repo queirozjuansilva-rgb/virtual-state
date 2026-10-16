@@ -3,6 +3,8 @@ import path from "node:path"
 
 import { describe, expect, it } from "vitest"
 
+import { formatDateTime } from "@/lib/format"
+
 import { configCopiloto, temChaveAnthropic } from "../config"
 import { executarTurno, type ChamadaFerramenta } from "../copiloto"
 import { VERSAO_PROMPT } from "../prompts"
@@ -129,7 +131,7 @@ function relatorio(resultados: Resultado[], taxa: number) {
   const linhas = [
     "# Evals do copiloto",
     "",
-    `- Data: ${new Date().toISOString()}`,
+    `- Data: ${formatDateTime(new Date())} (horário de Fortaleza)`,
     `- Modelo: ${configCopiloto.ANTHROPIC_MODEL} · esforço ${configCopiloto.COPILOTO_EFFORT} · prompt ${VERSAO_PROMPT}`,
     `- Resultado: **${resultados.filter((r) => r.passou).length}/${resultados.length} (${(taxa * 100).toFixed(1)}%)**, meta ${META * 100}%`,
     `- Tokens: ${resultados.reduce((s, r) => s + r.tokensEntrada, 0)} de entrada, ${resultados.reduce((s, r) => s + r.tokensSaida, 0)} de saída`,

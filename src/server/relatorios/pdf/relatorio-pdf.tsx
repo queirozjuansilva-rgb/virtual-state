@@ -1,10 +1,10 @@
 import "server-only"
 
-import { Document, G, Line, Page, Path, StyleSheet, Svg, Text, View } from "@react-pdf/renderer"
+import { Document, Line, Page, Path, StyleSheet, Svg, Text, View } from "@react-pdf/renderer"
 import type { ReactNode } from "react"
 
 import { formatBRL } from "@/lib/format"
-import { geometriaFluxo } from "@/lib/relatorio/grafico"
+import { layoutFluxo } from "@/lib/relatorio/grafico"
 import type { ModeloPdf, Par } from "@/lib/relatorio/pdf-modelo"
 
 /** PDF do relatório (ADR 0010): @react-pdf/renderer, sem navegador headless. */
@@ -207,47 +207,49 @@ function Lista({ itens, cor }: { itens: string[]; cor?: string }) {
 function Grafico({ modelo }: { modelo: ModeloPdf }) {
   const largura = 515
   const altura = 170
-  const g = geometriaFluxo(modelo.fluxo, largura, altura, {
-    topo: 8,
-    direita: 8,
-    base: 18,
-    esquerda: 58,
+  const fonte = 6.5
+  const g = layoutFluxo(modelo.fluxo, largura, altura, {
+    fonte,
+    rotuloValor: (v) => formatBRL(v, { compact: true }),
+    margens: { topo: 8, direita: 8, base: 18, esquerda: 40 },
   })
   if (g.pontos.length === 0) return null
   return (
     <View wrap={false}>
       <Svg width={largura} height={altura}>
         {g.ticksY.map((t) => (
-          <G key={t.valor}>
-            <Line
-              x1={g.margens.esquerda}
-              x2={largura - g.margens.direita}
-              y1={t.y}
-              y2={t.y}
-              stroke={COR.borda}
-              strokeWidth={0.5}
-            />
-            <Text
-              x={g.margens.esquerda - 4}
-              y={t.y + 2.5}
-              style={{ fontSize: 6.5 }}
-              fill={COR.suave}
-              textAnchor="end"
-            >
-              {formatBRL(t.valor, { compact: true })}
-            </Text>
-          </G>
+          <Line
+            key={t.valor}
+            x1={g.margens.esquerda}
+            x2={largura - g.margens.direita}
+            y1={t.y}
+            y2={t.y}
+            stroke={COR.borda}
+            strokeWidth={0.5}
+          />
         ))}
-        {g.ticksX.map((t) => (
+        {g.rotulosY.map((r, i) => (
           <Text
-            key={t.mes}
-            x={t.x}
-            y={altura - 4}
-            style={{ fontSize: 6.5 }}
+            key={i}
+            x={r.x}
+            y={r.y + fonte * 0.35}
+            style={{ fontSize: fonte }}
             fill={COR.suave}
-            textAnchor="middle"
+            textAnchor={r.ancora}
           >
-            {t.rotulo}
+            {r.texto}
+          </Text>
+        ))}
+        {g.rotulosX.map((r, i) => (
+          <Text
+            key={i}
+            x={r.x}
+            y={r.y}
+            style={{ fontSize: fonte }}
+            fill={COR.suave}
+            textAnchor={r.ancora}
+          >
+            {r.texto}
           </Text>
         ))}
         <Line
