@@ -11,7 +11,7 @@ import { TextField } from "@/components/forms/text-field"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { LAND_USE, options } from "@/lib/domain/labels"
-import { formatUSD } from "@/lib/format"
+import { formatDateTime, formatUSD } from "@/lib/format"
 import { interpretarPaginas, resumirPaginas } from "@/lib/legislacao/paginas"
 import type { Enums } from "@/lib/supabase/database.types"
 import { aplicarExtracao, criarZonasDaExtracao, extrairDaLei } from "@/server/legislacao/actions"
@@ -117,12 +117,7 @@ export function ListaExecucoes({ execucoes }: { execucoes: Execucao[] }) {
         return (
           <li key={e.id} className="space-y-2 p-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium">
-                {new Date(e.created_at).toLocaleString("pt-BR", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
-              </span>
+              <span className="font-medium">{formatDateTime(e.created_at)}</span>
               <span className="text-muted-foreground">
                 págs. {resumirPaginas(e.pages)} · {LAND_USE[e.target_use]} · {e.model} ·{" "}
                 {e.prompt_version}

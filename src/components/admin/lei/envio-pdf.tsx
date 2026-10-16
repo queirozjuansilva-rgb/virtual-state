@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { TextField } from "@/components/forms/text-field"
 import { Button } from "@/components/ui/button"
+import { hojeISO } from "@/lib/format"
 import { createClient } from "@/lib/supabase/client"
 import {
   criarUrlDeEnvio,
@@ -125,7 +126,7 @@ export function EnvioPdf({
         name="collected_at"
         label="Data da coleta"
         type="date"
-        defaultValue={coleta.collected_at ?? new Date().toISOString().slice(0, 10)}
+        defaultValue={coleta.collected_at ?? hojeISO()}
         description="Quando o arquivo foi obtido (não é a vigência)."
       />
       <TextField

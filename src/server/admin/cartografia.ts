@@ -13,6 +13,7 @@ import {
   textoDoAtributo,
   type ResumoCamada,
 } from "@/lib/geo/importacao"
+import { formatDate, hojeISO } from "@/lib/format"
 import type { Enums, Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 import { baixarArquivoOficial } from "@/server/legislacao/download"
@@ -105,7 +106,7 @@ export async function importarZonas(entrada: z.input<typeof zonasSchema>): Promi
     const d = zonasSchema.parse(entrada)
     const supabase = await admin()
     const grupos = agruparPorAtributo(await baixarColecao(d.url), d.atributoNome)
-    const coletadoEm = new Date().toLocaleDateString("pt-BR")
+    const coletadoEm = formatDate(hojeISO())
     const itens = grupos.map((g) => {
       const parametros = textoDoAtributo(g.feicoes[0]?.properties?.descricao)
       return {

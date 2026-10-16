@@ -7,6 +7,7 @@ import AdminLoading from "@/app/(app)/admin/loading"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
 import { RuleForm } from "@/components/admin/rule-form"
 import { LAND_USE, LEGAL_DOCUMENT_KIND } from "@/lib/domain/labels"
+import { formatDate } from "@/lib/format"
 import { archiveZoningRule, saveZoningRule } from "@/server/admin/actions"
 import { getRule, getRuleReview, listLegalDocuments } from "@/server/admin/queries"
 
@@ -55,8 +56,7 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
         <p className="flex items-start gap-2 rounded-lg border px-3 py-2 text-sm">
           <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
           <span>
-            Rascunho criado pela extração assistida de{" "}
-            {new Date(extraction.created_at).toLocaleDateString("pt-BR")} (
+            Rascunho criado pela extração assistida de {formatDate(extraction.created_at)} (
             <Link
               href={`/admin/leis/${extraction.legal_document_id}`}
               className="text-primary underline-offset-4 hover:underline"
