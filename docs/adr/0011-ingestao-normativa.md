@@ -50,6 +50,7 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
 - **Embeddings:** Voyage `voyage-4`, 1024 dimensões, por `fetch` (sem SDK), com `document` para trechos e `query` para a pergunta. O modelo fica salvo por trecho, porque trocar de série exige reindexar.
 - **Busca:** `buscar_texto_legal` é híbrida, juntando palavras e sentido por RRF.
   - Só entram normas vigentes (`effective_from`/`effective_until`), não revogadas por inteiro e não arquivadas.
+  - "Hoje" é a data em America/Fortaleza (`private.data_operacional()`), não a do fuso do banco (UTC). A revogação integral vale a partir da entrada em vigor da norma revogadora. Regra em `private.normas_vigentes`, com testes de regressão em PGlite (`src/lib/legislacao/vigencia.test.ts`).
   - A parte por palavras tem duas listas: uma com todos os termos e outra com qualquer termo, com nota dividida pelo tamanho do trecho. A pergunta raramente usa as palavras da lei ("coeficiente" × "índice de aproveitamento").
   - Sem chave da Voyage, a busca é só por palavras.
   - O copiloto passa a citar a página do PDF.
