@@ -116,12 +116,15 @@ export const consultarMercado = ferramenta({
       )
     }
 
-    const indicadores = resumirIndicadores(
-      await dados.indicadoresMercado(municipio.id),
-      tipologia,
-      bairro,
-      municipio.name,
-    )
+    // CPES: direitos de redistribuição ainda não confirmados; só administradores veem.
+    const indicadores = (await dados.usuarioEhAdmin())
+      ? resumirIndicadores(
+          await dados.indicadoresMercado(municipio.id),
+          tipologia,
+          bairro,
+          municipio.name,
+        )
+      : null
     if (indicadores) {
       avisos.push(
         "Indicadores agregados são preço médio de tabela (não de venda) e servem só de contexto: o preço do estudo vem dos comparáveis ou do usuário.",

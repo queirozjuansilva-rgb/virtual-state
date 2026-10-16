@@ -146,8 +146,14 @@ export interface DadosCopiloto {
     uf: string,
     padrao: string,
   ): Promise<{ value_m2: number; reference_month: string; source: string } | null>
-  /** Indicadores agregados do período mais recente do município (todos os bairros). */
+  /**
+   * Indicadores agregados do período mais recente do município (todos os
+   * bairros). Só para administradores enquanto os direitos de redistribuição
+   * do CPES não forem confirmados: para os demais, lista vazia.
+   */
   indicadoresMercado(municipioId: string): Promise<IndicadorMercado[]>
+  /** O usuário da conversa é administrador da plataforma. */
+  usuarioEhAdmin(): Promise<boolean>
   configMotor(): Promise<ConfigMotor>
   contextoTerreno(landId: string, usos?: Uso[]): Promise<ContextoTerreno | null>
   contextoPonto(params: {

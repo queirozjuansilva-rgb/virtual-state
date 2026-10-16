@@ -79,7 +79,7 @@ function tipologias(usos: Uso[]): Tipologia[] {
  * Carrega tudo o que o motor precisa sobre um terreno (respeitando a RLS do
  * usuário). `usos` define para quais tipologias buscar comparáveis; sem ele,
  * usa os usos das regras validadas da zona. Retorna null se o terreno não for
- * visível para o usuário.
+ * visível para o usuário ou estiver arquivado.
  */
 export async function carregarContexto(
   supabase: Supabase,
@@ -92,6 +92,7 @@ export async function carregarContexto(
       "id, code, area_m2, area_informada_m2, testada_principal_m, esquina, declividade_pct, matricula_numero, onus, preco_pedido, negociacao, permuta_pct, zone_assignment, zones_overlap_count, zone_id, geojson, municipality_id, tem_app, tem_area_alagavel, tem_faixa_dominio, tem_tombamento, tem_servidao, is_fictitious, zone:zones(id, code), municipality:municipalities(uf)",
     )
     .eq("id", landId)
+    .is("archived_at", null)
     .maybeSingle()
   falhou("o terreno", landError)
   if (!land) return null

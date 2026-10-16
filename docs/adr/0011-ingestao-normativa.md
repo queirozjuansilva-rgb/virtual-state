@@ -85,6 +85,7 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
   - **Condicionantes** (`environmental_layers`): uma linha por feição, com tipo e fonte. Reimportar a mesma fonte substitui a anterior.
 - **Limites do Supabase:** o banco corta instruções em 8 s, então os lotes são pequenos: uma zona por chamada e até ~800 KB por lote de camada.
 - **Arquivamento dos fictícios:** `archived_at` em zonas, camadas, terrenos, comparáveis e leis tira os dados de teste das funções espaciais, da busca, do copiloto e dos estudos. É reversível (`admin_arquivar_ficticios`).
+- **Terreno arquivado não é estudado**, nem com o UUID informado direto (`estudarTerreno` e `carregarContexto`). **Relatórios de terreno fictício ou arquivado** ficam só para administradores, com o selo "Dados de teste": RLS de `reports` (`private.terreno_de_teste`) e `revisoes_do_relatorio`. Relatórios reais e de ponto não mudam.
 - **Ponto sem zona urbana dentro de camada municipal** (ex.: ZPA do Cocó): o município passa a vir da camada.
 
 ### Relatórios, camadas e mercado (Blueprint v2.2)
@@ -98,6 +99,7 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
   - O que entra: preço médio de tabela por m² privativo, IVV e oferta por bairro, e o agregado do município, com fonte e página.
   - Uso: `consultar_mercado` devolve esses dados como contexto e avisa que não são preço do estudo.
   - Por que só uso interno: não há microdados nem direito de redistribuição (`internal_only`).
+  - Até a confirmação dos direitos com o Sinduscon-CE, só administradores leem os indicadores: na RLS de `market_indicators` e na ferramenta do chat (`usuarioEhAdmin`). Migration `20261016070000`.
   - Onde não entram: relatório, PDF e link público usam só a entrada do motor, então os indicadores ficam de fora.
   - Os dados foram carregados direto no banco e não estão no repositório.
 - **CUB-CE:** setembro/2026 vem da página do Sinduscon-CE, que confere com o valor de agosto já cadastrado.

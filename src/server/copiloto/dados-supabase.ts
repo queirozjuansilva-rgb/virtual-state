@@ -73,6 +73,23 @@ function comZona({ zone, ...regra }: LinhaRegra): RegraComZona {
  * `conversationId` liga as execuções do motor à conversa (analysis_runs).
  */
 export function dadosSupabase(supabase: Supabase, conversationId: string | null): DadosCopiloto {
+  let admin: Promise<boolean> | null = null
+  function usuarioEhAdmin() {
+    admin ??= (async () => {
+      const { data } = await supabase.auth.getClaims()
+      const id = data?.claims?.sub
+      if (!id) return false
+      const { data: perfil, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", id)
+        .maybeSingle()
+      falhou("o perfil", error)
+      return perfil?.role === "admin"
+    })()
+    return admin
+  }
+
   async function geometria(landId: string) {
     const { data, error } = await supabase
       .from("lands")
@@ -251,7 +268,11 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
         : null
     },
 
+    usuarioEhAdmin,
+
     async indicadoresMercado(municipioId) {
+      // CPES sem direito de redistribuição confirmado: só administradores (a RLS também barra).
+      if (!(await usuarioEhAdmin())) return []
       const { data, error } = await supabase
         .from("market_indicators")
         .select(

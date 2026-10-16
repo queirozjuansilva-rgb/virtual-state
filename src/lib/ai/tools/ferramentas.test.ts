@@ -305,6 +305,7 @@ describe("mercado", () => {
   })
 
   it("indicadores agregados do bairro e do município, só como contexto", async () => {
+    dados.usuarioEhAdmin = async () => true
     const linha = {
       typology: "apartamento" as const,
       period: "2026-06-01",
@@ -369,6 +370,45 @@ describe("mercado", () => {
       uso: "comercial",
     })
     expect(comercial.resultado.indicadores).toBeNull()
+  })
+})
+
+describe("indicadores do CPES restritos a administradores", () => {
+  const linhaCpes = {
+    typology: "apartamento" as const,
+    period: "2026-06-01",
+    source: "CPES Sinduscon-CE, 2º trimestre de 2026",
+    internal_only: true,
+    neighborhood: null,
+    avg_price_m2: 11977,
+    vso_pct: 0.076,
+    stock_units: 10753,
+    source_page: 32,
+  }
+
+  it("usuário comum não recebe indicadores, nem se a consulta devolvesse linhas", async () => {
+    let consultas = 0
+    dados.indicadoresMercado = async () => {
+      consultas++
+      return [linhaCpes]
+    }
+    const { resultado } = await rodar<ResultadoMercado>("consultar_mercado", { terreno: "VE-0001" })
+    expect(resultado.indicadores).toBeNull()
+    expect(consultas).toBe(0)
+    expect(JSON.stringify(resultado)).not.toMatch(/CPES|11\.977/)
+    // O restante do mercado continua: comparáveis e CUB.
+    expect(resultado.comparaveis?.mediana_m2_fmt).toBe("R$ 12.961,24/m²")
+    expect(resultado.cub?.padrao).toBe("R8-N")
+  })
+
+  it("administrador recebe os indicadores com fonte e página", async () => {
+    dados = criarDadosFixture({ admin: true })
+    dados.indicadoresMercado = async () => [linhaCpes]
+    const { resultado } = await rodar<ResultadoMercado>("consultar_mercado", { terreno: "VE-0001" })
+    expect(resultado.indicadores).toMatchObject({
+      fonte: "CPES Sinduscon-CE, 2º trimestre de 2026",
+      municipio: { nome: "Fortaleza", pagina: 32 },
+    })
   })
 })
 

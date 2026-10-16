@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   FileDown,
+  FlaskConical,
   History,
   Link2,
   Loader2,
@@ -174,7 +175,11 @@ export function RelatorioEditor({
             </span>
             <span aria-hidden>·</span>
             <span>Motor de viabilidade v{versao.versaoMotor}</span>
-            {relatorio.terreno?.ficticio && <Badge variant="outline">Dados fictícios</Badge>}
+            {relatorio.dadosDeTeste && (
+              <Badge variant="outline" className="text-violet-700 dark:text-violet-300">
+                <FlaskConical aria-hidden /> Dados de teste
+              </Badge>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -186,6 +191,20 @@ export function RelatorioEditor({
           <Compartilhar relatorioId={relatorio.id} token={relatorio.tokenCompartilhamento} />
         </div>
       </header>
+
+      {relatorio.dadosDeTeste && (
+        <p
+          role="note"
+          className="flex items-start gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 px-4 py-2 text-sm"
+        >
+          <FlaskConical className="mt-0.5 size-4 shrink-0 text-violet-600" aria-hidden />
+          <span>
+            <span className="font-medium">Dados de teste.</span> O terreno deste relatório é{" "}
+            {relatorio.terreno?.ficticio ? "fictício (seed de demonstração)" : "arquivado"}: só
+            administradores veem este relatório. Não use os números em decisões reais.
+          </span>
+        </p>
+      )}
 
       {relatorio.desatualizado && (
         <p

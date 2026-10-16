@@ -211,7 +211,9 @@ export type RegistrosFixture = {
   coberturas: { municipio: string; uf: string; endereco: string | null }[]
 }
 
-export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixture } {
+export function criarDadosFixture(
+  opcoes: { admin?: boolean } = {},
+): DadosCopiloto & { registros: RegistrosFixture } {
   const registros: RegistrosFixture = { analises: [], coberturas: [] }
   const desde = inicioJanela(config, seed.hoje)
 
@@ -286,6 +288,9 @@ export function criarDadosFixture(): DadosCopiloto & { registros: RegistrosFixtu
     },
     async indicadoresMercado() {
       return []
+    },
+    async usuarioEhAdmin() {
+      return opcoes.admin ?? false
     },
     async configMotor() {
       return config
