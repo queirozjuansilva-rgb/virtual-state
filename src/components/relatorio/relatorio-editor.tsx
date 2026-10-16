@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { ResultadoViabilidade } from "@/lib/feasibility"
-import { formatDate } from "@/lib/format"
+import { formatDateTime } from "@/lib/format"
 import {
   CAMPOS_EDITAVEIS,
   type CampoEditavel,
@@ -70,8 +70,6 @@ type Rascunho = {
   totalMs: number
   motorMs: number
 }
-
-const dataHora = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" })
 
 export function RelatorioEditor({
   relatorio,
@@ -172,7 +170,7 @@ export function RelatorioEditor({
             <span aria-hidden>·</span>
             <span>
               Versão {versao.versao} de {relatorio.versaoAtual}, salva em{" "}
-              {dataHora.format(new Date(versao.salvaEm))}
+              {formatDateTime(versao.salvaEm)}
             </span>
             <span aria-hidden>·</span>
             <span>Motor de viabilidade v{versao.versaoMotor}</span>
@@ -454,7 +452,7 @@ function Versoes({ relatorio }: { relatorio: RelatorioCompleto }) {
               </Link>
               <span className="text-xs text-muted-foreground">
                 {" "}
-                · {dataHora.format(new Date(v.salvaEm))} · motor v{v.versaoMotor}
+                · {formatDateTime(v.salvaEm)} · motor v{v.versaoMotor}
               </span>
               {v.versao === 1 ? (
                 <p className="text-xs text-muted-foreground">Estudo original.</p>
@@ -533,7 +531,7 @@ function Revisoes({
                 {r.veredito === "conferido" ? "Conferido" : "Divergente"}
               </Badge>{" "}
               <span className="text-xs text-muted-foreground">
-                versão {r.versao ?? "—"} · {r.revisor} · {formatDate(r.criadaEm)}
+                versão {r.versao ?? "—"} · {r.revisor} · {formatDateTime(r.criadaEm)}
               </span>
               {r.comentario && <p className="mt-1 text-sm">{r.comentario}</p>}
             </li>

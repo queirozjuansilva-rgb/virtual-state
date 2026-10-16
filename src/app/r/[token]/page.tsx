@@ -7,15 +7,16 @@ import { Logo } from "@/components/brand/logo"
 import { RelatorioConteudo } from "@/components/relatorio/relatorio-conteudo"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 import { carregarCompartilhado } from "@/server/relatorios/compartilhado"
 
 export const metadata: Metadata = {
   title: "Relatório compartilhado",
   robots: { index: false, follow: false },
+  // O token está na URL: nenhuma requisição externa (mapa, fontes) leva a página no Referer.
+  referrer: "no-referrer",
 }
-
-const dataHora = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" })
 
 /** Link somente leitura: última versão salva, sem login. */
 export default function RelatorioCompartilhadoPage({ params }: PageProps<"/r/[token]">) {
@@ -50,7 +51,7 @@ async function Conteudo({ params }: Pick<PageProps<"/r/[token]">, "params">) {
           <h1 className="text-2xl font-bold tracking-tight">{relatorio.titulo}</h1>
           <p className="text-sm text-muted-foreground">
             {relatorio.organizacao} · versão {versao.versao}, salva em{" "}
-            {dataHora.format(new Date(versao.salvaEm))} · motor de viabilidade v{versao.versaoMotor}
+            {formatDateTime(versao.salvaEm)} · motor de viabilidade v{versao.versaoMotor}
             {relatorio.terreno?.ficticio ? " · dados fictícios" : ""}
           </p>
         </div>

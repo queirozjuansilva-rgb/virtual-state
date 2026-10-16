@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { publicEnv } from "@/lib/env"
+import {
+  CAMINHO_NAO_ENCONTRADO,
+  FORMATO_TOKEN_PUBLICO,
+  tokenDaPaginaPublica,
+} from "@/lib/relatorio/link-publico"
 
 /** Rotas acessíveis sem sessão. */
 // "/r": link compartilhado de relatório (somente leitura, sem login).
@@ -55,6 +60,17 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(url, response)
   }
 
+  // Link público com token inválido ou desativado: 404 de verdade, decidido
+  // aqui porque a página faz streaming e, quando o notFound() dela roda, o
+  // status 200 já foi enviado. A tela é a mesma "não encontrada" (not-found.tsx).
+  if (await linkPublicoIndisponivel(supabase, pathname)) {
+    const naoEncontrado = NextResponse.rewrite(new URL(CAMINHO_NAO_ENCONTRADO, request.url), {
+      status: 404,
+    })
+    for (const cookie of response.cookies.getAll()) naoEncontrado.cookies.set(cookie)
+    return naoEncontrado
+  }
+
   if (isAuthenticated && (pathname === "/login" || pathname === "/cadastro")) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
@@ -64,6 +80,23 @@ export async function updateSession(request: NextRequest) {
 
   return response
 }
+
+/**
+ * Página /r/<token> cujo token não abre nenhum relatório (malformado, nunca
+ * existiu ou desativado). Erro do banco não vira 404: segue para a página.
+ */
+async function linkPublicoIndisponivel(
+  supabase: { rpc: (fn: string, args: { p_token: string }) => PromiseLike<RespostaRpc> },
+  pathname: string,
+): Promise<boolean> {
+  const token = tokenDaPaginaPublica(pathname)
+  if (token === null) return false
+  if (!FORMATO_TOKEN_PUBLICO.test(token)) return true
+  const { data, error } = await supabase.rpc("relatorio_compartilhado", { p_token: token })
+  return !error && data === null
+}
+
+type RespostaRpc = { data: unknown; error: { message: string } | null }
 
 /** Redireciona preservando os cookies de sessão já renovados. */
 function redirectWithCookies(url: URL, from: NextResponse) {

@@ -8,6 +8,7 @@ import type {
   RegraCompleta,
   TerrenoBruto,
 } from "@/lib/ai/dados"
+import { hojeISO } from "@/lib/format"
 import type { Json } from "@/lib/supabase/database.types"
 
 import {
@@ -65,10 +66,6 @@ type LinhaRegra = RegraCompleta & { zone: { id: string; code: string; name: stri
 
 function comZona({ zone, ...regra }: LinhaRegra): RegraComZona {
   return { zona: zone, regra }
-}
-
-function hojeFortaleza(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date())
 }
 
 /**
@@ -296,6 +293,6 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
 
     geocodificar: geocodificarMapTiler,
 
-    hoje: hojeFortaleza,
+    hoje: () => hojeISO(),
   }
 }

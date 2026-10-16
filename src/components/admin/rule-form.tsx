@@ -23,7 +23,7 @@ import { FieldError, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { LAND_USE, LEGAL_DOCUMENT_KIND, options } from "@/lib/domain/labels"
 import { RULE_FIELDS, type RuleField } from "@/lib/domain/zoning-rule-fields"
-import { formatNumber, toInputNumber } from "@/lib/format"
+import { formatDate, formatNumber, toInputNumber } from "@/lib/format"
 import {
   evaluateFormula,
   formatFormula,
@@ -171,8 +171,7 @@ export function RuleForm({
           {initial.status ? (
             <>
               <RuleStatusBadge status={initial.status} />
-              {initial.validated_at &&
-                `em ${new Date(initial.validated_at).toLocaleDateString("pt-BR")}`}
+              {initial.validated_at && `em ${formatDate(initial.validated_at)}`}
             </>
           ) : (
             "Nova regra"

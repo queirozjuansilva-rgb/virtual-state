@@ -10,6 +10,7 @@ import {
   type Premissas,
   type Uso,
 } from "@/lib/feasibility"
+import { hojeISO, somarMeses } from "@/lib/format"
 
 /**
  * Configuração do motor vinda do banco (feasibility_defaults e risk_weights).
@@ -140,11 +141,9 @@ export function montarConfig(defaults: LinhaDefault[], pesos: LinhaPeso[]): Conf
   }
 }
 
-/** Início (ISO) da janela de comparáveis contada a partir de `hoje`. */
-export function inicioJanela(config: Pick<ConfigMotor, "mercado">, hoje = new Date()): string {
-  const desde = new Date(hoje)
-  desde.setMonth(desde.getMonth() - config.mercado.janelaMeses)
-  return desde.toISOString().slice(0, 10)
+/** Início (ISO) da janela de comparáveis contada a partir de `hoje` (data em Fortaleza). */
+export function inicioJanela(config: Pick<ConfigMotor, "mercado">, hoje = hojeISO()): string {
+  return somarMeses(hoje, -config.mercado.janelaMeses)
 }
 
 /** Tipologia de comparável usada para o preço de venda de cada uso. */
