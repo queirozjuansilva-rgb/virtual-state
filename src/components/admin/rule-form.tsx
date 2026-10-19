@@ -1,6 +1,14 @@
 "use client"
 
-import { Archive, CircleCheck, Loader2, Save } from "lucide-react"
+import {
+  Archive,
+  CircleAlert,
+  CircleCheck,
+  ExternalLink,
+  Loader2,
+  Save,
+  Sparkles,
+} from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -26,12 +34,34 @@ import {
 import type { FormState } from "@/lib/forms"
 import type { Enums } from "@/lib/supabase/database.types"
 
-type Source = { legal_document_id: string; article: string; excerpt: string | null }
+type Source = {
+  legal_document_id: string
+  article: string
+  excerpt: string | null
+  page?: number | null
+  condition?: string | null
+  resolution_note?: string | null
+  excerpt_verified?: boolean | null
+}
+
+/** Contexto da revisão lado a lado (Fase 5). */
+export type RuleReview = {
+  /** Valores sugeridos pela extração assistida. */
+  extracted: Record<string, unknown> | null
+  /** Regra validada atual da mesma zona × uso, quando esta é um rascunho. */
+  validada: {
+    values: Record<string, unknown>
+    sources: Record<string, { legal_document_id: string; article: string }>
+  } | null
+  pdfUrls: Record<string, string>
+  docLabels: Record<string, string>
+}
 
 export type RuleInitial = {
   use_type?: Enums<"land_use">
   use_label_local?: string | null
   observacoes?: string | null
+  validation_note?: string | null
   status?: Enums<"rule_status">
   validated_at?: string | null
   values: Record<string, unknown>
@@ -45,11 +75,13 @@ export function RuleForm({
   archiveAction,
   initial,
   documents,
+  review,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
   archiveAction?: () => Promise<FormState>
   initial: RuleInitial
   documents: { id: string; kind: Enums<"legal_document_kind">; number: string }[]
+  review?: RuleReview
 }) {
   const { state, pending, onSubmit, errorsFor } = useFormAction(action)
   const docOptions = documents.map(
@@ -86,6 +118,7 @@ export function RuleForm({
           source={initial.sources.permitted}
           docOptions={docOptions}
           errorsFor={errorsFor}
+          review={review}
         />
       </Section>
 
@@ -102,6 +135,7 @@ export function RuleForm({
               source={initial.sources[field.key]}
               docOptions={docOptions}
               errorsFor={errorsFor}
+              review={review}
             />
           ))}
         </div>
@@ -114,6 +148,21 @@ export function RuleForm({
           rows={3}
           defaultValue={initial.observacoes ?? ""}
           errors={errorsFor("observacoes")}
+        />
+      </Section>
+
+      <Section
+        title="Homologação"
+        description="Obrigatória para validar: quem conferiu, contra qual texto e o que ficou pendente. A IA nunca valida regra."
+      >
+        <TextareaField
+          name="validation_note"
+          label="Nota de homologação"
+          rows={2}
+          maxLength={2000}
+          placeholder="Ex.: Conferido por Fulano (CREA 000) com a LC 62/2009, Art. 81, e alterações até a LC 439/2025."
+          defaultValue={initial.validation_note ?? ""}
+          errors={errorsFor("validation_note")}
         />
       </Section>
 
@@ -156,18 +205,43 @@ function ParameterRow({
   source,
   docOptions,
   errorsFor,
+  review,
 }: {
   field: RuleField
   initialValue: unknown
   source?: Source
   docOptions: (readonly [string, string])[]
   errorsFor: (name: string) => string[] | undefined
+  review?: RuleReview
 }) {
   const sourceErrors = errorsFor(`src_${field.key}`)
+  const sugerido = review?.extracted?.[field.key]
+  const validado = review?.validada?.values[field.key]
+  const fonteValidada = review?.validada?.sources[field.key]
+  const mudouDaValidada = review?.validada != null && !mesmoValor(validado, initialValue)
+  const conflito =
+    mudouDaValidada &&
+    fonteValidada &&
+    source &&
+    fonteValidada.legal_document_id !== source.legal_document_id
+  const pdf = source && review?.pdfUrls[source.legal_document_id]
   return (
     <div className="grid gap-4 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-      <div>
+      <div className="space-y-2">
         <ValueInput field={field} initialValue={initialValue} errors={errorsFor(field.key)} />
+        {sugerido !== undefined && !mesmoValor(sugerido, initialValue) && (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Sparkles className="size-3.5" aria-hidden /> IA sugeriu:{" "}
+            {formatarValor(field, sugerido)}
+          </p>
+        )}
+        {mudouDaValidada && (
+          <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs">
+            Regra validada atual: <strong>{formatarValor(field, validado)}</strong>
+            {fonteValidada &&
+              ` (${review?.docLabels[fonteValidada.legal_document_id] ?? "outra norma"}, ${fonteValidada.article})`}
+          </p>
+        )}
       </div>
       <fieldset className="grid gap-3 rounded-lg border border-dashed p-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <legend className="px-1 text-xs font-medium text-muted-foreground">
@@ -194,7 +268,55 @@ function ParameterRow({
             rows={2}
             defaultValue={source?.excerpt ?? ""}
           />
+          {source?.excerpt_verified === true && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-primary">
+              <CircleCheck className="size-3.5" aria-hidden /> Trecho encontrado no texto da página.
+            </p>
+          )}
+          {source?.excerpt_verified === false && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+              <CircleAlert className="size-3.5" aria-hidden /> Trecho não localizado no texto da
+              página: confira no PDF.
+            </p>
+          )}
         </div>
+        <TextField
+          name={`src_${field.key}_page`}
+          label="Página do PDF"
+          inputMode="numeric"
+          defaultValue={source?.page ? String(source.page) : ""}
+          description={
+            pdf && source?.page ? (
+              <a
+                href={`${pdf}#page=${source.page}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-primary"
+              >
+                Abrir a página {source.page} <ExternalLink className="size-3" aria-hidden />
+              </a>
+            ) : undefined
+          }
+        />
+        <TextField
+          name={`src_${field.key}_condition`}
+          label="Condição ou exceção"
+          placeholder="Ex.: lotes acima de 1.000 m²"
+          maxLength={500}
+          defaultValue={source?.condition ?? ""}
+        />
+        {(conflito || source?.resolution_note) && (
+          <div className="sm:col-span-2">
+            <TextareaField
+              name={`src_${field.key}_resolution`}
+              label="Resolução do conflito de fontes"
+              rows={2}
+              maxLength={1000}
+              placeholder="Qual norma prevalece e por quê (ex.: LC 236/2017 é posterior e específica)."
+              defaultValue={source?.resolution_note ?? ""}
+            />
+          </div>
+        )}
         {sourceErrors && (
           <div className="sm:col-span-2">
             <FieldError errors={sourceErrors.map((message) => ({ message }))} />
@@ -203,6 +325,22 @@ function ParameterRow({
       </fieldset>
     </div>
   )
+}
+
+function mesmoValor(a: unknown, b: unknown): boolean {
+  const vazio = (v: unknown) => v === null || v === undefined || v === ""
+  if (vazio(a) && vazio(b)) return true
+  if (typeof a === "number" && typeof b === "number")
+    return Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a))
+  return String(a) === String(b)
+}
+
+function formatarValor(field: RuleField, v: unknown): string {
+  if (v === null || v === undefined || v === "") return "vazio"
+  if (field.kind === "boolean") return v ? "Sim" : "Não"
+  if (field.kind === "percent" && typeof v === "number") return `${formatNumber(v * 100)}%`
+  if (typeof v === "number") return `${formatNumber(v)}${field.unit ? ` ${field.unit}` : ""}`
+  return String(v)
 }
 
 function ValueInput({

@@ -79,7 +79,7 @@ function tipologias(usos: Uso[]): Tipologia[] {
  * Carrega tudo o que o motor precisa sobre um terreno (respeitando a RLS do
  * usuário). `usos` define para quais tipologias buscar comparáveis; sem ele,
  * usa os usos das regras validadas da zona. Retorna null se o terreno não for
- * visível para o usuário.
+ * visível para o usuário ou estiver arquivado.
  */
 export async function carregarContexto(
   supabase: Supabase,
@@ -92,12 +92,13 @@ export async function carregarContexto(
       "id, code, area_m2, area_informada_m2, testada_principal_m, esquina, declividade_pct, matricula_numero, onus, preco_pedido, negociacao, permuta_pct, zone_assignment, zones_overlap_count, zone_id, geojson, municipality_id, tem_app, tem_area_alagavel, tem_faixa_dominio, tem_tombamento, tem_servidao, is_fictitious, zone:zones(id, code), municipality:municipalities(uf)",
     )
     .eq("id", landId)
+    .is("archived_at", null)
     .maybeSingle()
   falhou("o terreno", landError)
   if (!land) return null
 
   const uf = land.municipality?.uf ?? ""
-  const [regras, config, cubs, hits] = await Promise.all([
+  const [regras, config, cubs, hits, camadas] = await Promise.all([
     land.zone_id ? carregarRegrasValidadas(supabase, land.zone_id) : Promise.resolve([]),
     carregarConfig(supabase),
     carregarCubs(supabase, uf),
@@ -107,6 +108,7 @@ export async function carregarContexto(
           p_municipality_id: land.municipality_id,
         })
       : Promise.resolve({ data: [], error: null }),
+    tiposDeCamada(supabase, land.municipality_id),
   ])
   falhou("as restrições ambientais", hits.error)
 
@@ -154,6 +156,7 @@ export async function carregarContexto(
       is_fictitious: land.is_fictitious,
     },
     regras,
+    camadasDoMunicipio: camadas,
     hitsAmbientais: (hits.data ?? []).map((h) => ({
       kind: h.kind,
       name: h.name,
@@ -209,10 +212,11 @@ export async function carregarContextoPonto(
   const ponto = await analisarPonto(supabase, params.longitude, params.latitude)
   if (!ponto.zona || !ponto.municipio) return null
 
-  const [regras, config, cubs] = await Promise.all([
+  const [regras, config, cubs, camadasDoMunicipio] = await Promise.all([
     carregarRegrasValidadas(supabase, ponto.zona.id),
     carregarConfig(supabase),
     carregarCubs(supabase, ponto.municipio.uf),
+    tiposDeCamada(supabase, ponto.municipio.id),
   ])
   const desde = inicioJanela(config)
   const comparaveis: ContextoTerreno["comparaveis"] = {}
@@ -233,7 +237,20 @@ export async function carregarContextoPonto(
     }),
   )
 
-  return contextoDePonto({ ...params, ponto, regras, config, cubs, comparaveis, desde })
+  return {
+    ...contextoDePonto({ ...params, ponto, regras, config, cubs, comparaveis, desde }),
+    camadasDoMunicipio,
+  }
+}
+
+/** Tipos de camada que o município tem (para avisar "dados insuficientes"). */
+async function tiposDeCamada(
+  supabase: Supabase,
+  municipioId: string,
+): Promise<Enums<"environmental_layer_kind">[]> {
+  const { data, error } = await supabase.rpc("tipos_de_camada", { p_municipality_id: municipioId })
+  falhou("as camadas do município", error)
+  return (data ?? []) as Enums<"environmental_layer_kind">[]
 }
 
 /** Monta o contexto sintético de um ponto (sem I/O; usado também nos evals). */

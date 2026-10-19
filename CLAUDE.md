@@ -27,4 +27,9 @@ Leia `docs/PRD.md` antes de qualquer trabalho de produto. ADRs em `docs/adr/`.
 - Copiloto (ADR 0009): ferramentas em `src/lib/ai/tools` (zod + `DadosCopiloto`, nunca Supabase direto), prompt versionado em `src/lib/ai/prompts/copiloto.vN.md` (mudou o texto → nova versão + `npm run evals`). Histórico append-only: nunca edite mensagens gravadas nem mude prompt/ferramentas no meio da conversa. Se o seed mudar, regenere `src/lib/ai/evals/fixture/seed.json`.
 - Chave da Anthropic só no servidor (`ANTHROPIC_API_KEY`); nunca em `NEXT_PUBLIC_*`.
 - Relatório (ADR 0010): lógica pura em `src/lib/relatorio` (campos editáveis, seções, gráfico, modelo do PDF); página, link público e PDF usam as mesmas seções. Salvar versão sempre recalcula no servidor (o cliente só manda edições). PDF com `@react-pdf/renderer`: não ponha `lineHeight` na `Page` (some com o nº da página) e agrupe título + cabeçalho + 1ª linha de tabela num bloco `wrap={false}`.
+- Ingestão normativa (ADR 0011): lógica pura e testada em `src/lib/legislacao`, servidor em `src/server/legislacao`, prompts versionados em `prompts.ts` (mudou o texto → nova versão). A IA só cria rascunhos; validar regra exige nota de homologação. Arquivo `"use server"` só exporta funções async (exportar constante quebra o módulo).
+- O banco corta instruções em 8 s: escritas em lote do admin vão em lotes pequenos (uma zona por chamada; ~800 KB por lote de camada).
+- Dados arquivados (`archived_at`) saem de toda consulta: função espacial, busca ou ferramenta nova filtra `archived_at is null`.
+- Indicadores agregados de mercado (`market_indicators`, ex.: CPES) são só contexto: nunca entram na entrada do motor, no relatório, no PDF ou no link público.
+- O fixture dos evals (`src/lib/ai/evals/fixture/seed.json`) é um retrato do seed fictício; dados públicos carregados direto no banco não entram nele.
 - Branches: `feature/*` → `dev` → `main`. Antes de concluir: `npm run lint && npm run typecheck && npm test`.

@@ -5,6 +5,7 @@ import { Suspense } from "react"
 
 import AdminLoading from "@/app/(app)/admin/loading"
 import { FictitiousBadge } from "@/components/admin/badges"
+import { ArquivarFicticios, ImportarCartografia } from "@/components/admin/cartografia"
 import {
   DeleteButton,
   LegalDocumentForm,
@@ -12,6 +13,7 @@ import {
 } from "@/components/admin/municipality-forms"
 import { PageContainer, PageHeader, Section } from "@/components/admin/page-header"
 import { ZonesOverviewMap } from "@/components/admin/zones-overview-map"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -21,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { LEGAL_DOCUMENT_KIND, ZONE_KIND } from "@/lib/domain/labels"
+import { ENVIRONMENTAL_LAYER_KIND, LEGAL_DOCUMENT_KIND, ZONE_KIND } from "@/lib/domain/labels"
 import { formatDate } from "@/lib/format"
 import {
   createLegalDocument,
@@ -30,21 +32,23 @@ import {
 } from "@/server/admin/actions"
 import {
   getMunicipality,
-  listEnvironmentalLayers,
   listLegalDocuments,
   listZones,
+  summarizeEnvironmentalLayers,
 } from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Município" }
 
 async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/[id]">) {
   const { id } = await params
-  const [municipality, documents, zones, layers] = await Promise.all([
+  const [municipality, documents, zones, camadas] = await Promise.all([
     getMunicipality(id),
     listLegalDocuments(id),
     listZones(id),
-    listEnvironmentalLayers(id),
+    summarizeEnvironmentalLayers(id),
   ])
+  const zonasAtivas = zones.filter((z) => !z.archived_at)
+  const temFicticios = documents.some((d) => d.is_fictitious && !d.archived_at)
 
   return (
     <PageContainer>
@@ -72,7 +76,7 @@ async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/
           </Button>
         }
       >
-        {zones.some((z) => z.geojson) && <ZonesOverviewMap zones={zones} layers={layers} />}
+        {zonasAtivas.some((z) => z.geojson) && <ZonesOverviewMap zones={zonasAtivas} layers={[]} />}
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader>
@@ -105,7 +109,14 @@ async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/
                         {z.code}
                       </Link>
                     </TableCell>
-                    <TableCell>{z.name}</TableCell>
+                    <TableCell>
+                      {z.name}
+                      {z.archived_at && (
+                        <Badge variant="outline" className="ml-2 text-muted-foreground">
+                          Arquivada
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>{ZONE_KIND[z.kind]}</TableCell>
                     <TableCell>{z.geojson ? "Sim" : "Não (só manual)"}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -125,8 +136,49 @@ async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/
       </Section>
 
       <Section
+        title="Cartografia oficial e condicionantes"
+        description="Zonas e camadas (ambientais, patrimônio, risco, zonas especiais) importadas de portal público por URL. A zona dos terrenos é recalculada ao importar zonas."
+        actions={<ArquivarFicticios municipioId={id} temFicticios={temFicticios} />}
+      >
+        {camadas.length > 0 && (
+          <div className="overflow-hidden rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fonte</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-right">Feições</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {camadas.map((c) => (
+                  <TableRow key={`${c.source}|${c.kind}`}>
+                    <TableCell className="whitespace-normal">
+                      {c.source}
+                      {c.ficticia && <FictitiousBadge />}
+                      {c.arquivada && (
+                        <Badge variant="outline" className="ml-2 text-muted-foreground">
+                          Arquivada
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{ENVIRONMENTAL_LAYER_KIND[c.kind]}</TableCell>
+                    <TableCell className="text-right tabular-nums">{c.feicoes}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        <ImportarCartografia
+          municipioId={id}
+          documentos={documents.filter((d) => !d.archived_at)}
+        />
+      </Section>
+
+      <Section
         title="Documentos legais"
-        description="Leis e decretos citados como fonte das regras. Upload do PDF e extração assistida chegam na Fase 5."
+        description="Leis e decretos citados como fonte das regras. Abra a norma para enviar o PDF, rodar OCR e a extração assistida."
       >
         <div className="overflow-hidden rounded-lg border">
           <Table>
@@ -152,8 +204,18 @@ async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/
                 <TableRow key={d.id}>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2 font-medium">
-                      {LEGAL_DOCUMENT_KIND[d.kind]} nº {d.number}
+                      <Link
+                        href={`/admin/leis/${d.id}`}
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {LEGAL_DOCUMENT_KIND[d.kind]} nº {d.number}
+                      </Link>
                       {d.is_fictitious && <FictitiousBadge />}
+                      {d.archived_at && (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          Arquivada
+                        </Badge>
+                      )}
                       {d.official_url && (
                         <a
                           href={d.official_url}

@@ -105,7 +105,23 @@ export type ResultadoMercado = {
     ficticios: boolean
   } | null
   cub: { padrao: string; uf: string; valor_fmt: string; mes_fmt: string; origem: string } | null
+  /** Indicadores agregados (CPES): contexto, nunca preço do estudo; fora do PDF. */
+  indicadores: {
+    fonte: string
+    periodo_fmt: string
+    uso_interno: boolean
+    bairro: IndicadorResumo | null
+    municipio: IndicadorResumo | null
+  } | null
   avisos: string[]
+}
+
+export type IndicadorResumo = {
+  nome: string
+  preco_m2_fmt: string | null
+  ivv_fmt: string | null
+  oferta: number | null
+  pagina: number | null
 }
 
 export type MetricasResumo = {
@@ -173,7 +189,14 @@ export type ResultadoComparacao = {
 
 export type ResultadoLegislacao = {
   municipio: string
-  trechos: { documento: string; artigo: string | null; texto: string; ficticio: boolean }[]
+  trechos: {
+    documento: string
+    artigo: string | null
+    /** Páginas do PDF oficial ("p. 77" ou "p. 77–78"), quando a lei foi ingerida. */
+    paginas: string | null
+    texto: string
+    ficticio: boolean
+  }[]
   aviso: string
 }
 

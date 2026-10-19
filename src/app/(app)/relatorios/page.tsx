@@ -1,4 +1,4 @@
-import { FileText, Link2 } from "lucide-react"
+import { FileText, FlaskConical, Link2, TriangleAlert } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -49,6 +49,20 @@ async function Lista() {
           >
             <FileText className="size-4 text-brand" aria-hidden />
             <span className="min-w-0 flex-1 truncate font-medium">{r.titulo}</span>
+            {r.dadosDeTeste && (
+              <Badge
+                variant="outline"
+                className="text-violet-700 dark:text-violet-300"
+                title="Terreno fictício ou arquivado: só administradores veem este relatório."
+              >
+                <FlaskConical aria-hidden /> Dados de teste
+              </Badge>
+            )}
+            {r.desatualizado && (
+              <Badge variant="outline" className="text-amber-700 dark:text-amber-400">
+                <TriangleAlert aria-hidden /> Desatualizado
+              </Badge>
+            )}
             {r.compartilhado && (
               <Badge variant="outline" className="text-muted-foreground">
                 <Link2 aria-hidden /> Compartilhado

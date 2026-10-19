@@ -74,9 +74,28 @@ export type TrechoLegal = {
   article: string | null
   content: string
   is_fictitious: boolean
+  page_start: number | null
+  page_end: number | null
 }
 
 export type AmostraPreco = { price_m2: number; is_fictitious: boolean }
+
+/**
+ * Indicador agregado de mercado (ex.: CPES do Sinduscon-CE): preço médio de
+ * tabela, oferta e IVV por bairro ou do município (`neighborhood` nulo).
+ * Contexto para o usuário, nunca preço do estudo.
+ */
+export type IndicadorMercado = {
+  neighborhood: string | null
+  typology: Enums<"comparable_typology"> | null
+  period: string
+  avg_price_m2: number | null
+  vso_pct: number | null
+  stock_units: number | null
+  source: string
+  source_page: number | null
+  internal_only: boolean
+}
 
 export type MunicipioBruto = { id: string; name: string; uf: string; coverage_status: string }
 
@@ -127,6 +146,14 @@ export interface DadosCopiloto {
     uf: string,
     padrao: string,
   ): Promise<{ value_m2: number; reference_month: string; source: string } | null>
+  /**
+   * Indicadores agregados do período mais recente do município (todos os
+   * bairros). Só para administradores enquanto os direitos de redistribuição
+   * do CPES não forem confirmados: para os demais, lista vazia.
+   */
+  indicadoresMercado(municipioId: string): Promise<IndicadorMercado[]>
+  /** O usuário da conversa é administrador da plataforma. */
+  usuarioEhAdmin(): Promise<boolean>
   configMotor(): Promise<ConfigMotor>
   contextoTerreno(landId: string, usos?: Uso[]): Promise<ContextoTerreno | null>
   contextoPonto(params: {

@@ -480,6 +480,9 @@ function CartaoLegislacao({ l }: { l: ResultadoLegislacao }) {
             <p className="flex items-center gap-2 text-xs font-semibold">
               {t.documento}
               {t.artigo && `, ${t.artigo}`}
+              {t.paginas && (
+                <span className="font-normal text-muted-foreground">({t.paginas})</span>
+              )}
               {t.ficticio && <Ficticio />}
             </p>
             <p className="mt-1 line-clamp-4 text-xs text-muted-foreground">{t.texto}</p>
@@ -532,8 +535,40 @@ function CartaoMercado({ m }: { m: ResultadoMercado }) {
           <Indicador rotulo="Referência" valor={`${m.cub.mes_fmt} · ${m.cub.origem}`} />
         </dl>
       )}
+      {m.indicadores && <IndicadoresAgregados i={m.indicadores} />}
       <Avisos itens={m.avisos} />
     </Moldura>
+  )
+}
+
+function IndicadoresAgregados({ i }: { i: NonNullable<ResultadoMercado["indicadores"]> }) {
+  const linhas = [i.bairro, i.municipio].filter((x) => x !== null)
+  const paginas = [...new Set(linhas.map((l) => l.pagina).filter((p) => p !== null))]
+  return (
+    <div className="space-y-2 rounded-md border border-dashed p-2">
+      <p className="flex flex-wrap items-center gap-2 text-xs font-medium">
+        Contexto de mercado · {i.periodo_fmt}
+        {i.uso_interno && (
+          <Badge variant="outline" className="text-[10px]">
+            Uso interno
+          </Badge>
+        )}
+      </p>
+      {linhas.map((l) => (
+        <dl key={l.nome} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Indicador rotulo={l.nome} valor={l.preco_m2_fmt ?? "—"} />
+          <Indicador rotulo="IVV do mês" valor={l.ivv_fmt ?? "—"} />
+          <Indicador
+            rotulo="Oferta (unid.)"
+            valor={l.oferta === null ? "—" : l.oferta.toLocaleString("pt-BR")}
+          />
+        </dl>
+      ))}
+      <p className="text-xs text-muted-foreground">
+        Preço médio de tabela por m² privativo. Fonte: {i.fonte}
+        {paginas.length > 0 ? `, p. ${paginas.join(" e ")}` : ""}. Não é preço do estudo.
+      </p>
+    </div>
   )
 }
 

@@ -20,6 +20,7 @@ import {
 } from "@/server/feasibility/carregar-contexto"
 import { registrarExecucao } from "@/server/feasibility/registro"
 import { geocodificarMapTiler } from "@/server/geo/maptiler"
+import { embeddingDaPergunta, vetorParaPg } from "@/server/legislacao/embeddings"
 import { criarRelatorioDoEstudo } from "@/server/relatorios/criar"
 
 function falhou(etapa: string, error: { message: string } | null) {
@@ -72,6 +73,23 @@ function comZona({ zone, ...regra }: LinhaRegra): RegraComZona {
  * `conversationId` liga as execuções do motor à conversa (analysis_runs).
  */
 export function dadosSupabase(supabase: Supabase, conversationId: string | null): DadosCopiloto {
+  let admin: Promise<boolean> | null = null
+  function usuarioEhAdmin() {
+    admin ??= (async () => {
+      const { data } = await supabase.auth.getClaims()
+      const id = data?.claims?.sub
+      if (!id) return false
+      const { data: perfil, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", id)
+        .maybeSingle()
+      falhou("o perfil", error)
+      return perfil?.role === "admin"
+    })()
+    return admin
+  }
+
   async function geometria(landId: string) {
     const { data, error } = await supabase
       .from("lands")
@@ -84,13 +102,18 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
 
   return {
     async listarTerrenos() {
-      const { data, error } = await supabase.from("lands").select(COLUNAS_TERRENO).order("code")
+      // Arquivados (dados de teste fora de uso) não aparecem para o copiloto.
+      const { data, error } = await supabase
+        .from("lands")
+        .select(COLUNAS_TERRENO)
+        .is("archived_at", null)
+        .order("code")
       falhou("os terrenos", error)
       return ((data ?? []) as unknown as LinhaTerreno[]).map(paraTerreno)
     },
 
     async obterTerreno(ref: RefTerreno) {
-      let query = supabase.from("lands").select(COLUNAS_TERRENO)
+      let query = supabase.from("lands").select(COLUNAS_TERRENO).is("archived_at", null)
       if (ref.id) query = query.eq("id", ref.id)
       else if (ref.codigo) query = query.ilike("code", ref.codigo.trim())
       else return null
@@ -173,17 +196,24 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
     async contarTrechosLegais(municipioId) {
       const { count, error } = await supabase
         .from("legal_chunks")
-        .select("id, legal_documents!inner(municipality_id)", { count: "exact", head: true })
+        .select("id, legal_documents!inner(municipality_id, archived_at)", {
+          count: "exact",
+          head: true,
+        })
         .eq("legal_documents.municipality_id", municipioId)
+        .is("legal_documents.archived_at", null)
       falhou("a legislação", error)
       return count ?? 0
     },
 
     async buscarTextoLegal(municipioId, pergunta) {
+      // Busca híbrida: palavras + sentido (Voyage). Sem chave, só palavras.
+      const vetor = await embeddingDaPergunta(pergunta)
       const { data, error } = await supabase.rpc("buscar_texto_legal", {
         p_municipality_id: municipioId,
         p_query: pergunta,
         p_limit: 5,
+        ...(vetor ? { p_embedding: vetorParaPg(vetor) } : {}),
       })
       falhou("a legislação", error)
       return (data ?? []).map((t) => ({
@@ -191,6 +221,8 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
         article: t.article,
         content: t.content,
         is_fictitious: t.is_fictitious,
+        page_start: t.page_start,
+        page_end: t.page_end,
       }))
     },
 
@@ -234,6 +266,30 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
             source: cub.source,
           }
         : null
+    },
+
+    usuarioEhAdmin,
+
+    async indicadoresMercado(municipioId) {
+      // CPES sem direito de redistribuição confirmado: só administradores (a RLS também barra).
+      if (!(await usuarioEhAdmin())) return []
+      const { data, error } = await supabase
+        .from("market_indicators")
+        .select(
+          "neighborhood, typology, period, avg_price_m2, vso_pct, stock_units, source, source_page, internal_only",
+        )
+        .eq("municipality_id", municipioId)
+        .order("period", { ascending: false })
+        .limit(500)
+      falhou("os indicadores de mercado", error)
+      const periodo = data?.[0]?.period
+      return (data ?? [])
+        .filter((i) => i.period === periodo)
+        .map((i) => ({
+          ...i,
+          avg_price_m2: i.avg_price_m2 === null ? null : Number(i.avg_price_m2),
+          vso_pct: i.vso_pct === null ? null : Number(i.vso_pct),
+        }))
     },
 
     configMotor: () => carregarConfig(supabase),
