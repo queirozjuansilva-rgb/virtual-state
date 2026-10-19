@@ -12,6 +12,7 @@ import {
   MunicipalityForm,
 } from "@/components/admin/municipality-forms"
 import { PageContainer, PageHeader, Section } from "@/components/admin/page-header"
+import { PendenciaJuridica, RolarParaAncora } from "@/components/admin/pendencia-juridica"
 import { ZonesOverviewMap } from "@/components/admin/zones-overview-map"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,11 +29,13 @@ import { formatDate } from "@/lib/format"
 import {
   createLegalDocument,
   deleteLegalDocument,
+  resolverPendenciaJuridica,
   updateMunicipality,
 } from "@/server/admin/actions"
 import {
   getMunicipality,
   listLegalDocuments,
+  listLegalPendencies,
   listZones,
   summarizeEnvironmentalLayers,
 } from "@/server/admin/queries"
@@ -41,11 +44,12 @@ export const metadata: Metadata = { title: "Município" }
 
 async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/[id]">) {
   const { id } = await params
-  const [municipality, documents, zones, camadas] = await Promise.all([
+  const [municipality, documents, zones, camadas, pendencias] = await Promise.all([
     getMunicipality(id),
     listLegalDocuments(id),
     listZones(id),
     summarizeEnvironmentalLayers(id),
+    listLegalPendencies(id),
   ])
   const zonasAtivas = zones.filter((z) => !z.archived_at)
   const temFicticios = documents.some((d) => d.is_fictitious && !d.archived_at)
@@ -64,6 +68,26 @@ async function MunicipalityPageContent({ params }: PageProps<"/admin/municipios/
           submitLabel="Salvar município"
         />
       </Section>
+
+      {pendencias.length > 0 && (
+        <div id="pendencias" className="scroll-mt-20">
+          <RolarParaAncora id="pendencias" />
+          <Section
+            title="Pendências jurídicas"
+            description="Enquanto uma pendência estiver aberta, as regras que dependem das normas em análise não podem ser homologadas. A pendência não define nenhuma lei como vigente ou revogada."
+          >
+            <div className="space-y-4">
+              {pendencias.map((p) => (
+                <PendenciaJuridica
+                  key={p.id}
+                  pendencia={p}
+                  action={resolverPendenciaJuridica.bind(null, p.id)}
+                />
+              ))}
+            </div>
+          </Section>
+        </div>
+      )}
 
       <Section
         title="Zonas"

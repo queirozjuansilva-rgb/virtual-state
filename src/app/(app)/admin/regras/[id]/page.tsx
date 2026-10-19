@@ -5,11 +5,17 @@ import { Suspense } from "react"
 
 import AdminLoading from "@/app/(app)/admin/loading"
 import { PageContainer, PageHeader } from "@/components/admin/page-header"
+import { AvisoBloqueioJuridico } from "@/components/admin/pendencia-juridica"
 import { RuleForm } from "@/components/admin/rule-form"
 import { LAND_USE, LEGAL_DOCUMENT_KIND } from "@/lib/domain/labels"
 import { formatDate } from "@/lib/format"
 import { archiveZoningRule, saveZoningRule } from "@/server/admin/actions"
-import { getRule, getRuleReview, listLegalDocuments } from "@/server/admin/queries"
+import {
+  bloqueiosJuridicos,
+  getRule,
+  getRuleReview,
+  listLegalDocuments,
+} from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Regra urbanística" }
 
@@ -20,10 +26,12 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
   const rule = await getRule(id)
   const zone = Array.isArray(rule.zone) ? rule.zone[0] : rule.zone
   const extraction = Array.isArray(rule.extraction) ? rule.extraction[0] : rule.extraction
-  const [documents, review] = await Promise.all([
+  const [documents, review, bloqueios] = await Promise.all([
     zone ? listLegalDocuments(zone.municipality_id) : Promise.resolve([]),
     getRuleReview(rule),
+    bloqueiosJuridicos([id]),
   ])
+  const bloqueio = bloqueios.get(id) ?? []
   const sources = Object.fromEntries(rule.rule_sources.map((s) => [s.field, s]))
   const docLabels = Object.fromEntries(
     documents.map((d) => [d.id, `${LEGAL_DOCUMENT_KIND[d.kind]} nº ${d.number}`]),
@@ -51,6 +59,9 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
             ? "Regra validada. Ela já alimenta o motor de viabilidade."
             : "Rascunho salvo. Rascunhos não alimentam o motor."}
         </p>
+      )}
+      {bloqueio.length > 0 && (
+        <AvisoBloqueioJuridico titulos={bloqueio} municipioId={zone?.municipality_id} />
       )}
       {extraction && rule.status === "rascunho" && (
         <p className="flex items-start gap-2 rounded-lg border px-3 py-2 text-sm">
@@ -125,6 +136,7 @@ async function RulePageContent({ params, searchParams }: PageProps<"/admin/regra
           sources,
         }}
         documents={documents}
+        bloqueioJuridico={bloqueio.length > 0}
         review={{
           extracted: (rule.extracted_values as Record<string, unknown> | null) ?? null,
           validada: review.validada

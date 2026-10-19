@@ -73,5 +73,11 @@ describe("estados de erro", () => {
     expect(dbErrorState({ code: "23505", message: "dup" }).error).toContain("duplicado")
     expect(dbErrorState({ code: "42501", message: "rls" }).error).toContain("permissão")
     expect(dbErrorState({ message: "outro" }).error).toBe("Não foi possível salvar: outro")
+    expect(dbErrorState({ code: "VEJ01", message: "trava" }).error).toMatch(
+      /^Homologação bloqueada — vigência sob análise jurídica\. Salve como rascunho/,
+    )
+    expect(dbErrorState({ code: "22023", message: "Informe a data do parecer." }).error).toBe(
+      "Informe a data do parecer.",
+    )
   })
 })

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 
 import AdminLoading from "@/app/(app)/admin/loading"
-import { RuleStatusBadge } from "@/components/admin/badges"
+import { BloqueioJuridicoBadge, RuleStatusBadge } from "@/components/admin/badges"
 import { PageContainer, PageHeader, Section } from "@/components/admin/page-header"
 import { ZoneForm } from "@/components/admin/zone-form"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,13 @@ import {
 import { LAND_USE } from "@/lib/domain/labels"
 import { formatMeters, formatNumber, formatPercent } from "@/lib/format"
 import { saveZone } from "@/server/admin/actions"
-import { getZone, listLegalDocuments, listRules, listZones } from "@/server/admin/queries"
+import {
+  bloqueiosJuridicos,
+  getZone,
+  listLegalDocuments,
+  listRules,
+  listZones,
+} from "@/server/admin/queries"
 
 export const metadata: Metadata = { title: "Zona" }
 
@@ -33,6 +39,9 @@ async function ZonePageContent({ params }: PageProps<"/admin/zonas/[id]">) {
     listZones(zone.municipality_id),
     listRules(id),
   ])
+  const bloqueios = await bloqueiosJuridicos(
+    rules.filter((r) => r.status !== "arquivado").map((r) => r.id),
+  )
   const municipality = Array.isArray(zone.municipality) ? zone.municipality[0] : zone.municipality
 
   return (
@@ -100,7 +109,12 @@ async function ZonePageContent({ params }: PageProps<"/admin/zonas/[id]">) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <RuleStatusBadge status={r.status} />
+                    <div className="flex flex-wrap gap-1">
+                      <RuleStatusBadge status={r.status} />
+                      {bloqueios.has(r.id) && (
+                        <BloqueioJuridicoBadge titulos={bloqueios.get(r.id)!} />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {r.permitted ? `${formatNumber(r.ca_basico)} / ${formatNumber(r.ca_max)}` : "—"}

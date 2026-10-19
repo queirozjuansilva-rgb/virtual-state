@@ -3,6 +3,7 @@ import { z } from "zod"
 import { COVERAGE_STATUS, ENVIRONMENTAL_LAYER_KIND, LEGAL_DOCUMENT_KIND } from "@/lib/domain/labels"
 import { RULE_FIELDS, type RuleField } from "@/lib/domain/zoning-rule-fields"
 import { formatNumber, formatPercent } from "@/lib/format"
+import { ressalvaDeVigencia } from "@/lib/legislacao/bloqueio-juridico"
 
 import type { MunicipioBruto, RegraComZona, TerrenoBruto } from "../dados"
 import type {
@@ -310,7 +311,7 @@ export const buscarLegislacao = ferramenta({
   nome: "buscar_legislacao",
   rotulo: "Pesquisando a legislação municipal",
   descricao:
-    "Busca trechos do texto das leis urbanísticas vigentes indexadas do município (plano diretor, LUOS etc.), por palavras e por sentido. Cada trecho traz lei, artigo e página do PDF oficial. Use para explicar conceitos e contexto legal, ou quando não houver parâmetro validado. Trechos de lei NÃO são parâmetros validados: nunca use um número achado aqui como parâmetro do estudo. Informe `terreno` ou `municipio`.",
+    "Busca trechos do texto das leis urbanísticas indexadas do município (plano diretor, LUOS etc.), por palavras e por sentido. Cada trecho traz lei, artigo e página do PDF oficial. Use para explicar conceitos e contexto legal, ou quando não houver parâmetro validado. Trechos de lei NÃO são parâmetros validados: nunca use um número achado aqui como parâmetro do estudo. Lei indexada não quer dizer lei vigente: se o resultado trouxer `ressalva`, transmita-a ao usuário e não afirme que a lei está vigente nem que foi revogada. Informe `terreno` ou `municipio`.",
   entrada: z.object({
     pergunta: z
       .string()
@@ -323,7 +324,10 @@ export const buscarLegislacao = ferramenta({
   }),
   async executar(e, { dados }) {
     const municipio = await resolverMunicipio(dados, e)
-    const total = await dados.contarTrechosLegais(municipio.id)
+    const [total, pendencias] = await Promise.all([
+      dados.contarTrechosLegais(municipio.id),
+      dados.pendenciasJuridicasAbertas(municipio.id),
+    ])
     const trechos = total > 0 ? await dados.buscarTextoLegal(municipio.id, e.pergunta) : []
     const resultado: ResultadoLegislacao = {
       municipio: `${municipio.name}/${municipio.uf}`,
@@ -346,6 +350,7 @@ export const buscarLegislacao = ferramenta({
           : trechos.length === 0
             ? "Nenhum trecho encontrado para estes termos. Tente outras palavras ou diga que não encontrou."
             : "Trechos de lei para contexto. Não são parâmetros validados pelo time de analistas.",
+      ressalva: ressalvaDeVigencia(pendencias),
     }
     return {
       resultado,

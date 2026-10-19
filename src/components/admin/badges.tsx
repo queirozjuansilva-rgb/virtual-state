@@ -1,4 +1,4 @@
-import { CircleCheck, FilePen, FlaskConical, Archive } from "lucide-react"
+import { CircleCheck, FilePen, FlaskConical, Archive, Lock } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { COVERAGE_STATUS, LAND_STATUS, RULE_STATUS } from "@/lib/domain/labels"
@@ -60,6 +60,20 @@ export function FictitiousBadge() {
     <Badge variant="outline" className="text-muted-foreground">
       <FlaskConical aria-hidden />
       Fictício
+    </Badge>
+  )
+}
+
+/** Regra cuja validação está travada por pendência jurídica (o rascunho segue livre). */
+export function BloqueioJuridicoBadge({ titulos }: { titulos: string[] }) {
+  return (
+    <Badge
+      variant="outline"
+      title={`Homologação bloqueada — vigência sob análise jurídica: ${titulos.join("; ")}`}
+      className="border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+    >
+      <Lock aria-hidden />
+      Homologação bloqueada
     </Badge>
   )
 }

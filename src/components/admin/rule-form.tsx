@@ -6,6 +6,7 @@ import {
   CircleCheck,
   ExternalLink,
   Loader2,
+  Lock,
   Save,
   Sparkles,
 } from "lucide-react"
@@ -32,6 +33,7 @@ import {
   VARIABLES,
 } from "@/lib/formula"
 import type { FormState } from "@/lib/forms"
+import { AVISO_BLOQUEIO_JURIDICO } from "@/lib/legislacao/bloqueio-juridico"
 import type { Enums } from "@/lib/supabase/database.types"
 
 type Source = {
@@ -76,12 +78,15 @@ export function RuleForm({
   initial,
   documents,
   review,
+  bloqueioJuridico = false,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>
   archiveAction?: () => Promise<FormState>
   initial: RuleInitial
   documents: { id: string; kind: Enums<"legal_document_kind">; number: string }[]
   review?: RuleReview
+  /** Pendência jurídica aberta sobre as normas das fontes salvas: só a validação trava. */
+  bloqueioJuridico?: boolean
 }) {
   const { state, pending, onSubmit, errorsFor } = useFormAction(action)
   const docOptions = documents.map(
@@ -167,7 +172,7 @@ export function RuleForm({
       </Section>
 
       <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/90 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           {initial.status ? (
             <>
               <RuleStatusBadge status={initial.status} />
@@ -175,6 +180,15 @@ export function RuleForm({
             </>
           ) : (
             "Nova regra"
+          )}
+          {bloqueioJuridico && (
+            <span
+              id="bloqueio-juridico"
+              className="flex items-center gap-1 text-amber-800 dark:text-amber-300"
+            >
+              <Lock className="size-4" aria-hidden />
+              {AVISO_BLOQUEIO_JURIDICO}
+            </span>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -185,7 +199,13 @@ export function RuleForm({
             {pending ? <Loader2 className="animate-spin" aria-hidden /> : <Save aria-hidden />}
             Salvar rascunho
           </Button>
-          <Button type="submit" name="intent" value="validar" disabled={pending}>
+          <Button
+            type="submit"
+            name="intent"
+            value="validar"
+            disabled={pending || bloqueioJuridico}
+            aria-describedby={bloqueioJuridico ? "bloqueio-juridico" : undefined}
+          >
             {pending ? (
               <Loader2 className="animate-spin" aria-hidden />
             ) : (
