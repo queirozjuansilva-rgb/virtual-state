@@ -557,6 +557,38 @@ describe("legislação e cobertura", () => {
     expect(cartao).toBeUndefined()
   })
 
+  it("sem pendência jurídica aberta, a busca não traz ressalva de vigência", async () => {
+    const { resultado } = await rodar<{ ressalva: string | null }>("buscar_legislacao", {
+      pergunta: "recuo frontal",
+      terreno: "VE-0001",
+    })
+    expect(resultado.ressalva).toBeNull()
+  })
+
+  it("com pendência jurídica aberta, a busca traz a ressalva e não chama as leis de vigentes", async () => {
+    dados = criarDadosFixture({
+      pendenciasJuridicas: [
+        {
+          titulo: "Vigência da LC nº 450/2025 e efeitos da LC nº 461/2026",
+          normas: ["Lei complementar nº 62/2009", "Lei complementar nº 236/2017"],
+        },
+      ],
+    })
+    const { resultado } = await rodar<{ ressalva: string | null }>("buscar_legislacao", {
+      pergunta: "recuo frontal",
+      terreno: "VE-0001",
+    })
+    expect(resultado.ressalva).toBe(
+      "Vigência sob análise jurídica (Vigência da LC nº 450/2025 e efeitos da LC nº 461/2026). " +
+        "Normas afetadas: Lei complementar nº 62/2009, Lei complementar nº 236/2017 e as normas " +
+        "relacionadas a elas. A aplicação dessas normas depende de parecer jurídico ainda não " +
+        "emitido; não as trate como vigentes nem como revogadas.",
+    )
+    const definicao = definicoesFerramentas().find((d) => d.name === "buscar_legislacao")!
+    expect(definicao.description).not.toMatch(/leis urbanísticas vigentes/)
+    expect(definicao.description).toMatch(/ressalva/)
+  })
+
   it("município desconhecido na busca de legislação", async () => {
     expect(
       await falhar("buscar_legislacao", { pergunta: "gabarito", municipio: "Petrolina" }),

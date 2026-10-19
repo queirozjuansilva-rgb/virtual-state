@@ -1,6 +1,11 @@
 import { z } from "zod"
 
 import { parseDecimal } from "@/lib/format"
+import {
+  AVISO_BLOQUEIO_JURIDICO,
+  CODIGO_BLOQUEIO_JURIDICO,
+  ORIENTACAO_BLOQUEIO_JURIDICO,
+} from "@/lib/legislacao/bloqueio-juridico"
 
 /** Estado devolvido pelas Server Actions de formulário. */
 export type FormState = {
@@ -37,6 +42,10 @@ export function dbErrorState(error: { code?: string; message: string }): FormSta
       return { error: "Algum valor está fora do intervalo permitido." }
     case "42501":
       return { error: "Você não tem permissão para esta ação." }
+    case CODIGO_BLOQUEIO_JURIDICO:
+      return { error: `${AVISO_BLOQUEIO_JURIDICO}. ${ORIENTACAO_BLOQUEIO_JURIDICO}` }
+    case "22023": // validação de entrada nas funções do banco: a mensagem já é pt-BR
+      return { error: error.message }
     default:
       return { error: `Não foi possível salvar: ${error.message}` }
   }

@@ -258,6 +258,49 @@ export async function getRuleReview(rule: {
   }
 }
 
+// Pendências jurídicas ----------------------------------------------------------------
+
+/**
+ * Regras (pelas fontes salvas) cuja validação está bloqueada por pendência
+ * jurídica aberta → títulos das pendências (migration 20261019080000).
+ */
+export async function bloqueiosJuridicos(ruleIds: string[]): Promise<Map<string, string[]>> {
+  const bloqueios = new Map<string, string[]>()
+  if (ruleIds.length === 0) return bloqueios
+  const supabase = await adminClient()
+  for (const b of rows(
+    await supabase.rpc("regras_com_bloqueio_juridico", { p_rule_ids: ruleIds }),
+  )) {
+    bloqueios.set(b.rule_id, [...(bloqueios.get(b.rule_id) ?? []), b.title])
+  }
+  return bloqueios
+}
+
+/** Pendências jurídicas do município (abertas primeiro), com normas ligadas e alcance. */
+export async function listLegalPendencies(municipalityId: string) {
+  const supabase = await adminClient()
+  const pendencias = rows(
+    await supabase
+      .from("legal_pendencies")
+      .select(
+        "id, code, title, description, status, opened_at, opinion_summary, opinion_author, opinion_date, opinion_reference, resolved_at, legal_pendency_documents(legal_documents(id, kind, number))",
+      )
+      .eq("municipality_id", municipalityId)
+      .order("status")
+      .order("opened_at", { ascending: false }),
+  )
+  const alcances = await Promise.all(
+    pendencias.map((p) => supabase.rpc("alcance_da_pendencia_juridica", { p_pendency_id: p.id })),
+  )
+  return pendencias.map((p, i) => ({
+    ...p,
+    normas: p.legal_pendency_documents
+      .flatMap((d) => (Array.isArray(d.legal_documents) ? d.legal_documents : [d.legal_documents]))
+      .filter((d) => d !== null),
+    alcance: rows(alcances[i])[0] ?? null,
+  }))
+}
+
 // Terrenos --------------------------------------------------------------------------
 
 export async function listLands() {

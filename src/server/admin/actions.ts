@@ -20,13 +20,19 @@ import {
   type FormState,
 } from "@/lib/forms"
 import { RULE_FIELDS } from "@/lib/domain/zoning-rule-fields"
+import { hojeISO } from "@/lib/format"
 import { multiPolygonFromString, toMultiPolygon } from "@/lib/geo/geojson"
+import {
+  AVISO_BLOQUEIO_JURIDICO,
+  ORIENTACAO_BLOQUEIO_JURIDICO,
+} from "@/lib/legislacao/bloqueio-juridico"
 import { conflitosDeFonte } from "@/lib/legislacao/conflitos"
 import { localizarTrecho } from "@/lib/legislacao/trechos"
 import type { Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 import { landFormSchema, toLandRpcArgs } from "./land-input"
+import { parseResolucaoPendencia } from "./pendencia-input"
 import { parseRuleForm, type RuleSource } from "./rule-input"
 
 /** As funções RPC aceitam p_id nulo para "criar"; o tipo gerado não reflete isso. */
@@ -182,6 +188,22 @@ export async function saveZoningRule(
 
   const supabase = await adminClient()
 
+  // Pendência jurídica aberta sobre a norma de alguma fonte (ou da zona) impede
+  // validar; o rascunho continua livre. O gatilho do banco garante a mesma regra,
+  // esta consulta só antecipa a mensagem (migration 20261019080000).
+  if (validate) {
+    const { data: bloqueios, error } = await supabase.rpc("bloqueio_juridico", {
+      p_zone_id: zoneId,
+      p_document_ids: sources.map((f) => f.legal_document_id),
+    })
+    if (error) return dbErrorState(error)
+    if (bloqueios.length > 0) {
+      return {
+        error: `${AVISO_BLOQUEIO_JURIDICO} (${bloqueios.map((b) => b.title).join("; ")}). ${ORIENTACAO_BLOQUEIO_JURIDICO}`,
+      }
+    }
+  }
+
   // Fonte que diverge da regra validada atual, vinda de outra norma, exige
   // resolução documentada antes de homologar (Blueprint v2.2, p. 8 e 17).
   if (validate) {
@@ -278,6 +300,37 @@ export async function archiveZoningRule(ruleId: string): Promise<FormState> {
   if (error) return dbErrorState(error)
   refresh()
   return { ok: true, message: "Regra arquivada. Ela deixou de alimentar o motor." }
+}
+
+// Pendências jurídicas ----------------------------------------------------------------
+
+/**
+ * Encerra a pendência com o parecer, o responsável e a data, liberando a
+ * homologação das regras alcançadas. Não muda regra nem norma.
+ */
+export async function resolverPendenciaJuridica(
+  pendenciaId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = parseResolucaoPendencia(formDataToObject(formData), hojeISO())
+  if (!parsed.success) return zodErrorState(parsed.error)
+  const { parecer, responsavel, data, referencia } = parsed.data
+
+  const supabase = await adminClient()
+  const { error } = await supabase.rpc("admin_resolver_pendencia_juridica", {
+    p_id: pendenciaId,
+    p_parecer: parecer,
+    p_responsavel: responsavel,
+    p_data: data,
+    ...(referencia ? { p_referencia: referencia } : {}),
+  })
+  if (error) return dbErrorState(error)
+  refresh()
+  return {
+    ok: true,
+    message: "Parecer registrado. A homologação das regras alcançadas foi liberada.",
+  }
 }
 
 // Terrenos --------------------------------------------------------------------------

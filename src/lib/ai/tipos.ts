@@ -198,6 +198,8 @@ export type ResultadoLegislacao = {
     ficticio: boolean
   }[]
   aviso: string
+  /** Pendência jurídica aberta sobre a vigência das normas do município (ou null). */
+  ressalva: string | null
 }
 
 export type ResultadoLocalizacao = {

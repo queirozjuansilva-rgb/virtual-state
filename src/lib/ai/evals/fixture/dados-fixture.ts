@@ -1,5 +1,6 @@
 import { LAND_USE } from "@/lib/domain/labels"
 import type { Uso } from "@/lib/feasibility"
+import type { PendenciaAberta } from "@/lib/legislacao/bloqueio-juridico"
 import type { ContextoEstudo } from "@/lib/relatorio/tipos"
 import type { Enums } from "@/lib/supabase/database.types"
 import { contextoDePonto } from "@/server/feasibility/carregar-contexto"
@@ -212,7 +213,7 @@ export type RegistrosFixture = {
 }
 
 export function criarDadosFixture(
-  opcoes: { admin?: boolean } = {},
+  opcoes: { admin?: boolean; pendenciasJuridicas?: PendenciaAberta[] } = {},
 ): DadosCopiloto & { registros: RegistrosFixture } {
   const registros: RegistrosFixture = { analises: [], coberturas: [] }
   const desde = inicioJanela(config, seed.hoje)
@@ -270,6 +271,9 @@ export function criarDadosFixture(
     },
     async buscarTextoLegal() {
       return []
+    },
+    async pendenciasJuridicasAbertas() {
+      return opcoes.pendenciasJuridicas ?? []
     },
     async comparaveisTerreno(landId, tipologia) {
       return amostras(porTerreno[landId]?.comparaveis[tipologia])

@@ -8,8 +8,9 @@ import type {
   RegraCompleta,
   TerrenoBruto,
 } from "@/lib/ai/dados"
+import { LEGAL_DOCUMENT_KIND } from "@/lib/domain/labels"
 import { hojeISO } from "@/lib/format"
-import type { Json } from "@/lib/supabase/database.types"
+import type { Enums, Json } from "@/lib/supabase/database.types"
 
 import {
   analisarPonto,
@@ -223,6 +224,25 @@ export function dadosSupabase(supabase: Supabase, conversationId: string | null)
         is_fictitious: t.is_fictitious,
         page_start: t.page_start,
         page_end: t.page_end,
+      }))
+    },
+
+    async pendenciasJuridicasAbertas(municipioId) {
+      type NormaLigada = { kind: Enums<"legal_document_kind">; number: string }
+      const { data, error } = await supabase
+        .from("legal_pendencies")
+        .select("title, legal_pendency_documents(legal_documents(kind, number))")
+        .eq("municipality_id", municipioId)
+        .eq("status", "aberta")
+        .order("opened_at")
+      falhou("as pendências jurídicas", error)
+      return (data ?? []).map((p) => ({
+        titulo: p.title,
+        normas: p.legal_pendency_documents
+          .flatMap((d) => [d.legal_documents as NormaLigada | NormaLigada[] | null].flat())
+          .filter((d): d is NormaLigada => d !== null)
+          .map((d) => `${LEGAL_DOCUMENT_KIND[d.kind]} nº ${d.number}`)
+          .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })),
       }))
     },
 

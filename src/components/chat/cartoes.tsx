@@ -474,6 +474,12 @@ function CartaoLegislacao({ l }: { l: ResultadoLegislacao }) {
       subtitulo="Texto de lei para contexto (não é parâmetro validado)"
       rodape={l.aviso}
     >
+      {l.ressalva && (
+        <p className="mb-2 flex items-start gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+          <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          {l.ressalva}
+        </p>
+      )}
       <ul className="space-y-2">
         {l.trechos.map((t, i) => (
           <li key={i} className="rounded-lg bg-muted/50 px-3 py-2">

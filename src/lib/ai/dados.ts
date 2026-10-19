@@ -1,4 +1,5 @@
 import type { EntradaViabilidade, ResultadoViabilidade, Uso } from "@/lib/feasibility"
+import type { PendenciaAberta } from "@/lib/legislacao/bloqueio-juridico"
 import type { ContextoEstudo } from "@/lib/relatorio/tipos"
 import type { Enums } from "@/lib/supabase/database.types"
 import type { ConfigMotor } from "@/server/feasibility/config"
@@ -129,6 +130,8 @@ export interface DadosCopiloto {
   municipios(): Promise<MunicipioBruto[]>
   contarTrechosLegais(municipioId: string): Promise<number>
   buscarTextoLegal(municipioId: string, pergunta: string): Promise<TrechoLegal[]>
+  /** Pendências jurídicas abertas do município (vigência em análise), com as normas ligadas. */
+  pendenciasJuridicasAbertas(municipioId: string): Promise<PendenciaAberta[]>
   comparaveisTerreno(
     landId: string,
     tipologia: Enums<"comparable_typology">,

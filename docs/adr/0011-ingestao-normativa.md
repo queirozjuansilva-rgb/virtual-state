@@ -78,6 +78,35 @@ Com o Gabriel ausente, a equipe decidiu usar dados públicos ao máximo e tirar 
 - **Alterações posteriores:** `legal_document_links` registra que a norma X altera, revoga, regulamenta ou consolida a Y. A regra cuja fonte foi alterada mostra o aviso.
 - **Nota de homologação obrigatória** para validar: quem conferiu e com base em quê. A IA nunca valida.
 
+### Pendência jurídica: trava da homologação (19/10/2026)
+
+**Motivo:** não está definido se a LC 450/2025 (novo Plano Diretor) entrou em vigor antes da LC 461/2026, que ampliou o prazo do art. 620. Por consequência, também não está definido se a LC 62/2009 e a LC 236/2017 continuam aplicáveis. Ainda não há especialista para o parecer, e homologar regra dessas leis seria assumir a resposta. Migration `20261019080000`.
+
+- **Registro:** `legal_pendencies` guarda a pendência (código `vigencia-lc-450-2025`, Fortaleza); `legal_pendency_documents` liga as normas em análise (LC 62/2009 e LC 236/2017).
+  - Usuários logados leem as pendências abertas; o parecer de uma pendência encerrada fica só com administradores.
+  - Ninguém escreve direto na tabela. A abertura é por migration; o encerramento, pela função abaixo.
+  - Uma norma ou um município com pendência não pode ser excluído (`on delete restrict`); assim a trava não deixa de valer em silêncio.
+  - As funções do schema `public` são SECURITY INVOKER e conferem `is_admin()`; o trecho privilegiado (trava e encerramento) fica em `private`, que a API não expõe.
+- **Alcance:** as normas ligadas e, em cadeia, as que agem sobre elas em `legal_document_links` (hoje, 22 alteradoras da LC 62/2009). Uma regra do mesmo município é alcançada quando alguma fonte, ou a norma da zona, está nesse conjunto. Em 19/10/2026, isso inclui as 16 regras de Fortaleza em rascunho.
+- **Trava:** gatilhos de restrição adiados em `zoning_rules` e `rule_sources` conferem no fim da transação, depois de as fontes serem regravadas, se a regra terminou "validado" estando alcançada.
+  - Se terminou, a transação inteira é desfeita, inclusive o arquivamento da validada anterior. O erro tem SQLSTATE `VEJ01`.
+  - Vale para a tela, a RPC e a escrita direta.
+  - Salvar rascunho e arquivar continuam livres.
+- **Painel:**
+  - A regra alcançada mostra "Homologação bloqueada — vigência sob análise jurídica", e o botão "Salvar e validar" fica desativado.
+  - A lista de regras da zona mostra o selo.
+  - A página do município ganha a seção "Pendências jurídicas", com as normas em análise e o número de regras alcançadas.
+- **Desbloqueio:** `admin_resolver_pendencia_juridica` exige parecer (conclusão), responsável (nome e identificação) e data não futura; a referência é opcional.
+  - A restrição da tabela repete a exigência.
+  - O registro fica no `audit_log`.
+  - Desbloquear não valida nenhuma regra: cada uma continua precisando de homologação técnica.
+- **Copiloto:** `buscar_legislacao` deixa de chamar as leis indexadas de "vigentes" e devolve `ressalva` quando o município tem pendência aberta. O cartão de legislação mostra a ressalva.
+- **O que não muda:** nenhuma regra, parâmetro, data de vigência ou revogação, nem norma. A pendência não define lei alguma como vigente ou revogada.
+- **Operação no banco compartilhado** (`supabase/operacoes/`, fora do alcance da CLI):
+  - **Ensaio:** a migration inteira num único `DO` que termina em exceção. Confere pendência, alcance e trava com os dados reais e não grava nada. É montado por `ensaio.mts`.
+  - **Reversão:** `…reversao.sql` remove gatilhos, funções, tabelas, o tipo e o registro da migration, numa transação e sem `CASCADE`. Mantém o `audit_log` e os demais dados.
+- **Testes:** `src/server/admin/pendencia-juridica.test.ts` (PGlite, com as funções reais das migrations), incluindo atomicidade, ensaio e reversão.
+
 ### Cartografia oficial e dados fictícios
 
 - **Importação por URL** (Fortaleza em Mapas, Ipplan/SEUMA):

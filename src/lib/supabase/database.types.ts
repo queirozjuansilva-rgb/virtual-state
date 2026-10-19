@@ -1033,6 +1033,101 @@ export type Database = {
           },
         ]
       }
+      legal_pendencies: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          municipality_id: string
+          opened_at: string
+          opinion_author: string | null
+          opinion_date: string | null
+          opinion_reference: string | null
+          opinion_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["legal_pendency_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description: string
+          id?: string
+          municipality_id: string
+          opened_at?: string
+          opinion_author?: string | null
+          opinion_date?: string | null
+          opinion_reference?: string | null
+          opinion_summary?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["legal_pendency_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          municipality_id?: string
+          opened_at?: string
+          opinion_author?: string | null
+          opinion_date?: string | null
+          opinion_reference?: string | null
+          opinion_summary?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["legal_pendency_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_pendencies_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_pendency_documents: {
+        Row: {
+          created_at: string
+          legal_document_id: string
+          pendency_id: string
+        }
+        Insert: {
+          created_at?: string
+          legal_document_id: string
+          pendency_id: string
+        }
+        Update: {
+          created_at?: string
+          legal_document_id?: string
+          pendency_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_pendency_documents_legal_document_id_fkey"
+            columns: ["legal_document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_pendency_documents_pendency_id_fkey"
+            columns: ["pendency_id"]
+            isOneToOne: false
+            referencedRelation: "legal_pendencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_comparables: {
         Row: {
           address: string | null
@@ -1724,6 +1819,16 @@ export type Database = {
         Args: { p_municipality_id: string }
         Returns: number
       }
+      admin_resolver_pendencia_juridica: {
+        Args: {
+          p_data: string
+          p_id: string
+          p_parecer: string
+          p_referencia?: string
+          p_responsavel: string
+        }
+        Returns: undefined
+      }
       admin_save_land: {
         Args: { p_data: Json; p_geojson: Json; p_id: string; p_owner: Json }
         Returns: string
@@ -1751,7 +1856,23 @@ export type Database = {
         Args: { p_document_id: string; p_trechos: Json }
         Returns: number
       }
+      alcance_da_pendencia_juridica: {
+        Args: { p_pendency_id: string }
+        Returns: {
+          normas_diretas: number
+          normas_relacionadas: number
+          regras: number
+        }[]
+      }
       analisar_ponto: { Args: { p_lat: number; p_lon: number }; Returns: Json }
+      bloqueio_juridico: {
+        Args: { p_document_ids: string[]; p_zone_id: string }
+        Returns: {
+          code: string
+          id: string
+          title: string
+        }[]
+      }
       buscar_texto_legal: {
         Args: {
           p_embedding?: string
@@ -1846,6 +1967,14 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      regras_com_bloqueio_juridico: {
+        Args: { p_rule_ids: string[] }
+        Returns: {
+          pendency_id: string
+          rule_id: string
+          title: string
+        }[]
+      }
       relatorio_compartilhado: { Args: { p_token: string }; Returns: Json }
       revisoes_do_relatorio: {
         Args: { p_report_id: string }
@@ -1937,6 +2066,7 @@ export type Database = {
         | "instrucao_normativa"
         | "outro"
       legal_link_kind: "altera" | "revoga" | "regulamenta" | "consolida"
+      legal_pendency_status: "aberta" | "resolvida"
       message_role: "user" | "assistant" | "tool" | "system"
       negotiation_type:
         | "dinheiro"
@@ -2148,6 +2278,7 @@ export const Constants = {
         "outro",
       ],
       legal_link_kind: ["altera", "revoga", "regulamenta", "consolida"],
+      legal_pendency_status: ["aberta", "resolvida"],
       message_role: ["user", "assistant", "tool", "system"],
       negotiation_type: [
         "dinheiro",
